@@ -4,7 +4,7 @@
 
 ### Overview
 
-The current order processing solution runs on **BizTalk Server 2020** — Microsoft's enterprise service bus and integration platform. It consists of tightly coupled components managed through the BizTalk Administration Console.
+The current superannuation fund management solution runs on **BizTalk Server 2020** — Microsoft's enterprise service bus and integration platform. It consists of tightly coupled components managed through the BizTalk Administration Console.
 
 ### Architecture Diagram
 
@@ -50,7 +50,7 @@ The current order processing solution runs on **BizTalk Server 2020** — Micros
 | Receive Pipeline                     | `HttpReceivePipeline.btp`     | XML validation and disassembly               |
 | MessageBox                           | SQL Server database           | Message persistence and routing              |
 | Orchestration Engine                 | XLANG/s runtime               | Business process coordination                |
-| Map                                  | `OrderToFulfillmentMap.btm`   | XML transformation with functoids            |
+| Map                                  | `ContributionToAllocationMap.btm`   | XML transformation with functoids            |
 | Send Pipeline                        | `HttpSendPipeline.btp`        | XML assembly and encoding                    |
 | HTTP Send Port                       | BizTalk HTTP Adapter          | Outbound delivery                            |
 | BizTalk Management DB                | SQL Server database           | Application metadata and bindings            |
@@ -74,15 +74,15 @@ The target solution runs as an **Azure Function** on the Consumption plan — fu
 │  │  Insights        │   │                                                │  │
 │  │  + Log Analytics │   │  func-order-processingdev.azurewebsites.net    │  │
 │  │                  │   │                                                │  │
-│  │  • Traces        │◀──│  POST /api/orders                              │  │
+│  │  • Traces        │◀──│  POST /api/contributions                              │  │
 │  │  • Metrics       │   │  ┌──────────────────────────────────────────┐  │  │
-│  │  • Alerts        │   │  │  OrderProcessingFunction                 │  │  │
+│  │  • Alerts        │   │  │  SuperContributionFunction                 │  │  │
 │  │  • Dashboards    │   │  │                                          │  │  │
 │  └──────────────────┘   │  │  1. XmlSerializer.Deserialize()          │  │  │
 │                         │  │  2. ValidateOrder()                      │  │  │
-│  ┌──────────────────┐   │  │  3. IOrderTransformService.Transform()   │  │  │
-│  │  Azure Storage   │   │  │  4. IFulfillmentSenderService.SendAsync()│  │  │
-│  │  (AzureWebJobs   │◀──│  │  5. return 202 { fulfillmentId }         │  │  │
+│  ┌──────────────────┐   │  │  3. IContributionTransformService.Transform()   │  │  │
+│  │  Azure Storage   │   │  │  4. IFundAllocationSenderService.SendAsync()│  │  │
+│  │  (AzureWebJobs   │◀──│  │  5. return 202 { allocationId }         │  │  │
 │  │   Storage)       │   │  └──────────────────────────────────────────┘  │  │
 │  └──────────────────┘   │                                                │  │
 │                         └───────────────────────┬────────────────────────┘  │
@@ -103,10 +103,10 @@ The target solution runs as an **Azure Function** on the Consumption plan — fu
 | Component                        | Technology                       | Purpose                                      |
 |----------------------------------|----------------------------------|----------------------------------------------|
 | HTTP Trigger                     | `[HttpTrigger]` attribute        | Inbound message ingestion                    |
-| XML Deserialization              | `System.Xml.Serialization`       | Parse incoming `SourceOrder` XML             |
+| XML Deserialization              | `System.Xml.Serialization`       | Parse incoming `SuperContribution` XML             |
 | Validation                       | C# guard clauses                 | Reject malformed or incomplete orders        |
-| Transformation                   | `OrderTransformService`          | Map `SourceOrder` → `FulfillmentOrder`       |
-| HTTP Dispatch                    | `FulfillmentSenderService`       | POST to downstream fulfillment service       |
+| Transformation                   | `ContributionTransformService`          | Map `SuperContribution` → `FundAllocation`       |
+| HTTP Dispatch                    | `FundAllocationSenderService`       | POST to downstream fund administration platform       |
 | Configuration                    | Azure App Settings               | `FulfillmentServiceUrl` and other secrets    |
 | Observability                    | Application Insights SDK         | Distributed tracing, metrics, alerting       |
 | Storage                          | Azure Blob Storage               | Function runtime host management             |

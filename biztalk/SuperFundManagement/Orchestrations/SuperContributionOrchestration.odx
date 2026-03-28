@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<om:Module xmlns:om="http://schemas.microsoft.com/BizTalk/2003/DesignerData"
+           xmlns:bt="http://schemas.microsoft.com/BizTalk/2003/BizTalkOrchestration"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           Name="SuperContributionOrchestration"
+           Namespace="SuperFundManagement.Orchestrations"
+           Version="1.0.0.0">
+
+  <om:PartBody>
+    <bt:OrchestrationType IsWebService="false" IsWebClientOrchestration="false">
+
+      <!-- ==================== Message Declarations ==================== -->
+      <bt:Message Name="SuperContributionRequestMsg" Type="SuperFundManagement.Schemas.SuperContribution.SuperContributionRequest">
+        <bt:MessageProperty IsDistinguished="true" PropName="ContributionId"
+                            PropNamespace="SuperFundManagement.Schemas.SuperContribution" />
+      </bt:Message>
+
+      <bt:Message Name="FundAllocationInstructionMsg" Type="SuperFundManagement.Schemas.FundAllocation.FundAllocationInstruction">
+        <bt:MessageProperty IsDistinguished="true" PropName="AllocationId"
+                            PropNamespace="SuperFundManagement.Schemas.FundAllocation" />
+      </bt:Message>
+
+      <!-- ==================== Port Declarations ==================== -->
+      <bt:Port Name="ReceiveContributionPort"
+               Polarity="Implements"
+               Modifier="Public"
+               TypeName="IReceiveContributionPortType">
+        <bt:PortTypeRef Namespace="SuperFundManagement.Orchestrations"
+                        Name="IReceiveContributionPortType" />
+      </bt:Port>
+
+      <bt:Port Name="SendAllocationPort"
+               Polarity="Uses"
+               Modifier="Public"
+               TypeName="ISendAllocationPortType">
+        <bt:PortTypeRef Namespace="SuperFundManagement.Orchestrations"
+                        Name="ISendAllocationPortType" />
+      </bt:Port>
+
+      <!-- ==================== Port Types ==================== -->
+      <bt:PortType Name="IReceiveContributionPortType"
+                   Modifier="Internal"
+                   IsWebService="false">
+        <bt:PortOperation Name="ReceiveContribution"
+                          Direction="Receive"
+                          MessageType="SuperFundManagement.Schemas.SuperContribution.SuperContributionRequest">
+          <bt:Message Name="SuperContributionRequestMsg" />
+        </bt:PortOperation>
+      </bt:PortType>
+
+      <bt:PortType Name="ISendAllocationPortType"
+                   Modifier="Internal"
+                   IsWebService="false">
+        <bt:PortOperation Name="SendAllocation"
+                          Direction="Send"
+                          MessageType="SuperFundManagement.Schemas.FundAllocation.FundAllocationInstruction">
+          <bt:Message Name="FundAllocationInstructionMsg" />
+        </bt:PortOperation>
+      </bt:PortType>
+
+      <!-- ==================== Correlation Sets ==================== -->
+      <bt:CorrelationDeclaration Name="ContributionCorrelationSet"
+                                 CorrelationType="SuperFundManagement.Orchestrations.ContributionCorrelationType">
+      </bt:CorrelationDeclaration>
+
+      <bt:CorrelationType Name="ContributionCorrelationType">
+        <bt:Property Name="SuperFundManagement.Schemas.SuperContribution.ContributionId" />
+      </bt:CorrelationType>
+
+      <!-- ==================== Orchestration Body ==================== -->
+      <bt:Body>
+
+        <!-- Shape: Receive – Activates the orchestration on incoming HTTP message -->
+        <bt:Receive Name="ReceiveContribution"
+                    ActivationReceive="true"
+                    OperationName="ReceiveContribution"
+                    PortName="ReceiveContributionPort"
+                    Message="SuperContributionRequestMsg"
+                    Shape="Receive">
+          <bt:InitCorrelation Name="ContributionCorrelationSet" />
+        </bt:Receive>
+
+        <!-- Shape: Construct – Build FundAllocationInstructionMsg using ContributionToAllocationMap -->
+        <bt:Construct Name="ConstructFundAllocationInstruction"
+                      Shape="ConstructMessage">
+          <bt:Message Name="FundAllocationInstructionMsg" />
+          <bt:Transform Name="TransformContributionToAllocation"
+                        Shape="Transform"
+                        SourceMessage="SuperContributionRequestMsg"
+                        TargetMessage="FundAllocationInstructionMsg"
+                        MapName="SuperFundManagement.Maps.ContributionToAllocationMap" />
+        </bt:Construct>
+
+        <!-- Shape: Send – Post transformed message to fund administration platform -->
+        <bt:Send Name="SendFundAllocationInstruction"
+                 OperationName="SendAllocation"
+                 PortName="SendAllocationPort"
+                 Message="FundAllocationInstructionMsg"
+                 Shape="Send">
+          <bt:FollowCorrelation Name="ContributionCorrelationSet" />
+        </bt:Send>
+
+      </bt:Body>
+
+    </bt:OrchestrationType>
+  </om:PartBody>
+
+</om:Module>

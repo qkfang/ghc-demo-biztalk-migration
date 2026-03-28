@@ -8,8 +8,8 @@
 - [ ] VS Code open with this repository
 - [ ] GitHub Copilot extension installed and signed in
 - [ ] Copilot Chat panel open (Ctrl+Shift+I)
-- [ ] `func/OrderProcessingFunc` open in Explorer sidebar
-- [ ] `biztalk/OrderProcessing/Maps/OrderToFulfillmentMap.btm` open in an editor tab
+- [ ] `func/SuperFundManagementFunc` open in Explorer sidebar
+- [ ] `biztalk/SuperFundManagement/Maps/ContributionToAllocationMap.btm` open in an editor tab
 - [ ] Terminal open in `func/` folder
 - [ ] Font size bumped up for visibility
 
@@ -21,25 +21,25 @@
 
 ### What to Show First
 
-Open `biztalk/OrderProcessing/Orchestrations/OrderProcessingOrchestration.odx` and briefly say:
+Open `biztalk/SuperFundManagement/Orchestrations/SuperFundManagementOrchestration.odx` and briefly say:
 
 > "This is the BizTalk orchestration — XML-based, Designer-driven, requires a full BizTalk Server. Let's see how Copilot helps us recreate this as a modern Azure Function."
 
 ### Copilot Chat Prompt
 
-Open a **new file** `OrderProcessingFunction_new.cs` in the Functions folder, then open Copilot Chat and type:
+Open a **new file** `SuperFundManagementFunction_new.cs` in the Functions folder, then open Copilot Chat and type:
 
 ```
 I have a BizTalk Server orchestration that:
-1. Activates on an HTTP POST with an XML body (SourceOrder schema)
-2. Transforms the XML using a map (SourceOrder → FulfillmentOrder)
+1. Activates on an HTTP POST with an XML body (SuperContribution schema)
+2. Transforms the XML using a map (SuperContribution → FundAllocationInstruction)
 3. POSTs the transformed XML to a downstream HTTP endpoint
 
 Generate an Azure Functions v4 .NET 8 isolated worker C# class with:
-- HTTP trigger on POST /api/orders
+- HTTP trigger on POST /api/contributions
 - XML deserialization using XmlSerializer
-- Dependency injection of IOrderTransformService and IFulfillmentSenderService
-- Returns 202 Accepted with a JSON body { fulfillmentId, status }
+- Dependency injection of IContributionTransformService and IFundAllocationSenderService
+- Returns 202 Accepted with a JSON body { allocationId, status }
 - Returns 400 on validation errors
 - Returns 502 if the downstream service fails
 ```
@@ -65,19 +65,19 @@ Copilot generates a complete function class including:
 
 ### What to Show First
 
-Open `biztalk/OrderProcessing/Maps/OrderToFulfillmentMap.btm` and point at the functoid sections:
+Open `biztalk/SuperFundManagement/Maps/ContributionToAllocationMap.btm` and point at the functoid sections:
 
-> "Here's the BizTalk map — it uses drag-and-drop 'functoids'. The String Concatenate functoid adds 'FF-' to the OrderId. The Multiplication functoid computes LineTotal. Copilot can read this and write the equivalent C# code."
+> "Here's the BizTalk map — it uses drag-and-drop 'functoids'. The String Concatenate functoid adds 'FA-' to the ContributionId. The Looping functoid iterates member allocations. Copilot can read this and write the equivalent C# code."
 
 ### Copilot Chat Prompt (in context of the .btm file open)
 
 ```
 Looking at this BizTalk map file, explain what each functoid does 
 and then rewrite the entire transformation as a clean C# method 
-in OrderTransformService that maps SourceOrder to FulfillmentOrder.
+in ContributionTransformService that maps SuperContribution to FundAllocationInstruction.
 
 The method should:
-- Prefix FulfillmentId with "FF-"
+- Prefix AllocationId with "FA-"
 - Map CustomerDetails fields
 - Use LINQ to transform Items into LineItems
 - Calculate LineTotal as Quantity * UnitPrice
@@ -88,16 +88,16 @@ The method should:
 ### Expected Copilot Output
 
 ```csharp
-public FulfillmentOrder Transform(SourceOrder order)
+public FundAllocationInstruction Transform(SuperContribution order)
 {
-    return new FulfillmentOrder
+    return new FundAllocationInstruction
     {
-        FulfillmentId = $"FF-{order.OrderId}",
-        SourceOrderRef = order.OrderId,
+        AllocationId = $"FA-{contribution.ContributionId}",
+        SourceContributionRef = contribution.ContributionId,
         CustomerDetails = new CustomerDetails
         {
-            Id = order.CustomerId,
-            Name = order.CustomerName,
+            Id = contribution.EmployerId,
+            Name = contribution.EmployerName,
             Email = order.CustomerEmail
         },
         LineItems = new FulfillmentLineItems
@@ -136,16 +136,16 @@ Convert this BizTalk multiplication functoid to C# equivalent code
 
 ### What to Show First
 
-Open `func/OrderProcessingFunc.Tests/Services/OrderTransformServiceTests.cs` and say:
+Open `func/SuperFundManagementFunc.Tests/Services/ContributionTransformServiceTests.cs` and say:
 
 > "We have the service written. Now let's ask Copilot to generate comprehensive unit tests — the kind that would have required a full test strategy document with BizTalk."
 
-### Copilot Chat Prompt (with OrderTransformService.cs open in context)
+### Copilot Chat Prompt (with ContributionTransformService.cs open in context)
 
 ```
-Generate comprehensive xUnit tests for OrderTransformService. 
+Generate comprehensive xUnit tests for ContributionTransformService. 
 Include tests for:
-1. FulfillmentId gets "FF-" prefix (Assert.StartsWith)
+1. AllocationId gets "FA-" prefix (Assert.StartsWith)
 2. CustomerDetails fields are mapped correctly
 3. LineItems are mapped with correct count and LineTotal calculation (Qty × Price)
 4. Status is always "PENDING"
@@ -153,7 +153,7 @@ Include tests for:
 6. OrderTotal is preserved
 7. ArgumentNullException is thrown for null input
 
-Use a private helper method BuildSampleOrder() that returns a realistic SourceOrder.
+Use a private helper method BuildSampleOrder() that returns a realistic SuperContribution.
 Show exact expected values in each assertion.
 ```
 
@@ -190,14 +190,14 @@ All tests pass immediately.
 
 ### What to Show First
 
-Open `func/OrderProcessingFunc/Services/OrderTransformService.cs` and highlight the class without XML docs.
+Open `func/SuperFundManagementFunc/Services/ContributionTransformService.cs` and highlight the class without XML docs.
 
 ### Copilot Chat Prompt
 
 ```
-Add XML documentation comments to this OrderTransformService class and 
+Add XML documentation comments to this ContributionTransformService class and 
 its Transform method. The comments should:
-- Explain that this replaces the BizTalk OrderToFulfillmentMap.btm
+- Explain that this replaces the BizTalk ContributionToAllocationMap.btm
 - Document each significant mapping step in the method body
 - Reference the BizTalk equivalent functoid names in inline comments
 - Add <param> and <returns> tags
@@ -208,23 +208,23 @@ its Transform method. The comments should:
 ```csharp
 /// <summary>
 /// Implements the order-to-fulfillment transformation logic.
-/// This is the Azure Functions equivalent of the BizTalk OrderToFulfillmentMap.btm,
-/// including the String Concatenate functoid (FF- prefix) and Multiplication functoid (LineTotal).
+/// This is the Azure Functions equivalent of the BizTalk ContributionToAllocationMap.btm,
+/// including the String Concatenate functoid (FA- prefix) and Multiplication functoid (LineTotal).
 /// </summary>
-public class OrderTransformService : IOrderTransformService
+public class ContributionTransformService : IContributionTransformService
 {
     /// <summary>
-    /// Transforms a <see cref="SourceOrder"/> into a <see cref="FulfillmentOrder"/>,
+    /// Transforms a <see cref="SuperContribution"/> into a <see cref="FundAllocationInstruction"/>,
     /// applying all business rules equivalent to the BizTalk map functoids.
     /// </summary>
     /// <param name="order">The incoming source order to transform.</param>
-    /// <returns>A fully populated <see cref="FulfillmentOrder"/> ready to dispatch.</returns>
-    public FulfillmentOrder Transform(SourceOrder order)
+    /// <returns>A fully populated <see cref="FundAllocationInstruction"/> ready to dispatch.</returns>
+    public FundAllocationInstruction Transform(SuperContribution order)
     {
-        return new FulfillmentOrder
+        return new FundAllocationInstruction
         {
-            // BizTalk equivalent: String Concatenate functoid("FF-", OrderId)
-            FulfillmentId = $"FF-{order.OrderId}",
+            // BizTalk equivalent: String Concatenate functoid("FA-", OrderId)
+            AllocationId = $"FA-{contribution.ContributionId}",
             // ...
         };
     }
@@ -278,7 +278,7 @@ Generate Azure Bicep to deploy this .NET 8 isolated Azure Function with:
 
 ### Bonus: Explain BizTalk file
 
-Select all content in `OrderProcessingOrchestration.odx`, open Copilot Chat:
+Select all content in `SuperFundManagementOrchestration.odx`, open Copilot Chat:
 
 ```
 Explain what this BizTalk ODX orchestration file does in plain English, 
@@ -289,5 +289,5 @@ and identify what Azure services or patterns would replace each component.
 
 ```
 Given this XSD schema, generate a valid sample XML document I can use 
-to test the OrderProcessingFunction HTTP endpoint with curl.
+to test the SuperFundManagementFunction HTTP endpoint with curl.
 ```

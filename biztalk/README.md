@@ -1,23 +1,23 @@
-# BizTalk OrderProcessing Solution
+# BizTalk SuperFundManagement Solution
 
-This folder contains the BizTalk Server 2020 solution for the **Order Processing** application — the legacy baseline for the migration demo.
+This folder contains the BizTalk Server 2020 solution for the **Superannuation Fund Management** application — the legacy baseline for the migration demo. It models a super company processing employer contribution requests and routing fund allocation instructions to the fund administration platform.
 
 ## Solution Structure
 
 ```
-OrderProcessing/
-├── OrderProcessing.btproj         # BizTalk project file
-├── BindingFile.xml                # Port & orchestration bindings
+SuperFundManagement/
+├── SuperFundManagement.btproj         # BizTalk project file
+├── BindingFile.xml                    # Port & orchestration bindings
 ├── Schemas/
-│   ├── SourceOrderSchema.xsd      # Incoming XML order schema
-│   └── TargetFulfillmentSchema.xsd # Outgoing fulfillment schema
+│   ├── SuperContributionSchema.xsd    # Incoming employer contribution schema
+│   └── FundAllocationSchema.xsd       # Outgoing fund allocation schema
 ├── Maps/
-│   └── OrderToFulfillmentMap.btm  # XSLT map with functoids
+│   └── ContributionToAllocationMap.btm  # XSLT map with functoids
 ├── Orchestrations/
-│   └── OrderProcessingOrchestration.odx  # Main orchestration
+│   └── SuperContributionOrchestration.odx  # Main orchestration
 └── Pipelines/
-    ├── HttpReceivePipeline.btp    # Receive pipeline (XML Disassembler)
-    └── HttpSendPipeline.btp       # Send pipeline (XML Assembler)
+    ├── HttpReceivePipeline.btp        # Receive pipeline (XML Disassembler)
+    └── HttpSendPipeline.btp           # Send pipeline (XML Assembler)
 ```
 
 ## Prerequisites
@@ -30,7 +30,7 @@ OrderProcessing/
 
 ## Build
 
-1. Open `OrderProcessing.sln` in Visual Studio
+1. Open `SuperFundManagement.sln` in Visual Studio
 2. Right-click the solution → **Restore NuGet Packages**
 3. Set the `BizTalkInstallPath` property if not set automatically:
    ```xml
@@ -39,14 +39,14 @@ OrderProcessing/
    ```
 4. Build the solution:
    ```
-   msbuild OrderProcessing.sln /p:Configuration=Release
+   msbuild SuperFundManagement.sln /p:Configuration=Release
    ```
 
 ## Deploy to BizTalk Server
 
 ### Option 1: Deploy from Visual Studio
 
-1. In Solution Explorer, right-click `OrderProcessing` project
+1. In Solution Explorer, right-click `SuperFundManagement` project
 2. Select **Deploy**
 3. The project auto-deploys to the BizTalk Management Database
 
@@ -54,13 +54,13 @@ OrderProcessing/
 
 ```powershell
 # Import the MSI (after building)
-BTSTask ImportApp /Package:"bin\Release\OrderProcessing.msi" /Overwrite
+BTSTask ImportApp /Package:"bin\Release\SuperFundManagement.msi" /Overwrite
 
 # Import bindings
-BTSTask ImportBindings /ApplicationName:OrderProcessing /Source:BindingFile.xml
+BTSTask ImportBindings /ApplicationName:SuperFundManagement /Source:BindingFile.xml
 
 # Enlist and start
-BTSTask StartApplication /ApplicationName:OrderProcessing
+BTSTask StartApplication /ApplicationName:SuperFundManagement
 ```
 
 ### Option 3: Deploy via BizTalk Admin Console
@@ -74,83 +74,78 @@ BTSTask StartApplication /ApplicationName:OrderProcessing
 
 ## Port Configurations
 
-### Receive Location: `OrderHttpReceive_Location`
+### Receive Location: `ContributionHttpReceive_Location`
 
-| Property        | Value                              |
-|-----------------|------------------------------------|
-| Transport       | HTTP                               |
-| URL             | `/OrderProcessing/Receive`         |
-| Port            | 7070 (IIS binding)                 |
-| Pipeline        | `HttpReceivePipeline`              |
-| Message Type    | `SourceOrder.OrderRequest`         |
-| Authentication  | None (extend for production)       |
+| Property        | Value                                 |
+|-----------------|---------------------------------------|
+| Transport       | HTTP                                  |
+| URL             | `/SuperFundManagement/Receive`        |
+| Port            | 7070 (IIS binding)                    |
+| Pipeline        | `HttpReceivePipeline`                 |
+| Message Type    | `SuperContribution.SuperContributionRequest` |
+| Authentication  | None (extend for production)          |
 
 The HTTP adapter is hosted in IIS. Configure an IIS application pointing to `%BTSHTTPRECEIVE%` virtual directory on port 7070.
 
-### Send Port: `FulfillmentHttpSend`
+### Send Port: `AllocationHttpSend`
 
-| Property        | Value                                          |
-|-----------------|------------------------------------------------|
-| Transport       | HTTP                                           |
-| URL             | `http://downstream-service/api/fulfillment`    |
-| Pipeline        | `HttpSendPipeline`                             |
-| Content-Type    | `application/xml`                              |
-| Retry Count     | 3                                              |
-| Retry Interval  | 5 seconds                                      |
-| Map             | `OrderToFulfillmentMap`                        |
-| Filter          | `BTS.ReceivePortName == OrderHttpReceive`      |
+| Property        | Value                                              |
+|-----------------|----------------------------------------------------|
+| Transport       | HTTP                                               |
+| URL             | `http://fund-admin-platform/api/allocations`       |
+| Pipeline        | `HttpSendPipeline`                                 |
+| Content-Type    | `application/xml`                                  |
+| Retry Count     | 3                                                  |
+| Retry Interval  | 5 seconds                                          |
+| Map             | `ContributionToAllocationMap`                      |
+| Filter          | `BTS.ReceivePortName == ContributionHttpReceive`   |
 
 ## Orchestration Flow
 
 ```
-HTTP POST (XML OrderRequest)
+HTTP POST (XML SuperContributionRequest)
         ↓
-[OrderHttpReceive] Receive Port
+[ContributionHttpReceive] Receive Port
         ↓
 [HttpReceivePipeline] XML Disassembler + Validator
         ↓
-[OrderProcessingOrchestration]
-    1. ReceiveOrder (activate)
-    2. Construct FulfillmentOrderMsg via OrderToFulfillmentMap
-    3. SendFulfillmentOrder
+[SuperContributionOrchestration]
+    1. ReceiveContribution (activate)
+    2. Construct FundAllocationInstructionMsg via ContributionToAllocationMap
+    3. SendFundAllocationInstruction
         ↓
 [HttpSendPipeline] XML Assembler
         ↓
-[FulfillmentHttpSend] Send Port
+[AllocationHttpSend] Send Port
         ↓
-HTTP POST to downstream-service/api/fulfillment
+HTTP POST to fund-admin-platform/api/allocations
 ```
 
-## Map: OrderToFulfillmentMap
+## Map: ContributionToAllocationMap
 
 Key transformations:
 
-| Source Field                | Target Field                     | Logic                          |
-|-----------------------------|----------------------------------|--------------------------------|
-| `OrderId`                   | `FulfillmentId`                  | String Concatenate: `"FF-"` + OrderId |
-| `OrderId`                   | `SourceOrderRef`                 | Direct copy                    |
-| `CustomerId`                | `CustomerDetails/Id`             | Direct copy                    |
-| `CustomerName`              | `CustomerDetails/Name`           | Direct copy                    |
-| `CustomerEmail`             | `CustomerDetails/Email`          | Direct copy                    |
-| `OrderDate`                 | `RequestedDate`                  | Direct copy                    |
-| `Items/Item[*]`             | `LineItems/LineItem[*]`          | Looping functoid               |
-| `Item/ProductCode`          | `LineItem/SKU`                   | Direct copy                    |
-| `Item/ProductName`          | `LineItem/Description`           | Direct copy                    |
-| `Item/Quantity`             | `LineItem/Qty`                   | Direct copy                    |
-| `Item/UnitPrice`            | `LineItem/Price`                 | Direct copy                    |
-| `Item/Quantity * UnitPrice` | `LineItem/LineTotal`             | Multiplication functoid        |
-| `TotalAmount`               | `OrderTotal`                     | Direct copy                    |
-| `Currency`                  | `CurrencyCode`                   | Direct copy                    |
-| `ShippingAddress/Street`    | `ShipTo/AddressLine1`            | Direct copy                    |
-| `ShippingAddress/City`      | `ShipTo/City`                    | Direct copy                    |
-| `ShippingAddress/State`     | `ShipTo/StateProvince`           | Direct copy                    |
-| `ShippingAddress/ZipCode`   | `ShipTo/PostalCode`              | Direct copy                    |
-| `ShippingAddress/Country`   | `ShipTo/CountryCode`             | Direct copy                    |
-| *(constant)*                | `Status`                         | Value: `"PENDING"`             |
+| Source Field                       | Target Field                              | Logic                                       |
+|------------------------------------|-------------------------------------------|---------------------------------------------|
+| `ContributionId`                   | `AllocationId`                            | String Concatenate: `"FA-"` + ContributionId |
+| `ContributionId`                   | `SourceContributionRef`                   | Direct copy                                 |
+| `EmployerId`                       | `EmployerDetails/EmployerId`              | Direct copy                                 |
+| `EmployerName`                     | `EmployerDetails/EmployerName`            | Direct copy                                 |
+| `EmployerABN`                      | `EmployerDetails/ABN`                     | Direct copy                                 |
+| `PayPeriodEndDate`                 | `AllocationDate`                          | Direct copy                                 |
+| `Members/Member[*]`                | `MemberAllocations/Allocation[*]`         | Looping functoid                            |
+| `Member/MemberAccountNumber`       | `Allocation/AccountNumber`                | Direct copy                                 |
+| `Member/MemberName`                | `Allocation/MemberName`                   | Direct copy                                 |
+| `Member/ContributionType`          | `Allocation/ContributionType`             | Direct copy                                 |
+| `Member/GrossAmount`               | `Allocation/ContributionAmount`           | Direct copy                                 |
+| *(constant)*                       | `Allocation/AllocationStatus`             | Value: `"PENDING"`                          |
+| `TotalContribution`                | `TotalAllocated`                          | Direct copy                                 |
+| `Currency`                         | `CurrencyCode`                            | Direct copy                                 |
+| *(constant)*                       | `Status`                                  | Value: `"PENDING"`                          |
 
 ## Troubleshooting
 
-- **Pipeline validation failure**: Ensure `SourceOrderSchema.xsd` is deployed to the BizTalk Management DB
+- **Pipeline validation failure**: Ensure `SuperContributionSchema.xsd` is deployed to the BizTalk Management DB
 - **HTTP 404 on receive**: Verify IIS virtual directory for HTTP adapter is running on port 7070
 - **Orchestration suspended**: Check BizTalk Admin Console → Group Hub → Suspended Instances
 - **Map failures**: Use BizTalk Mapper in Visual Studio to test the `.btm` file with sample XML

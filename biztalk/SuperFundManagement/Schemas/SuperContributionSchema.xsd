@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-16"?>
+<xs:schema xmlns="http://SuperFundManagement.Schemas.SuperContribution"
+           xmlns:b="http://schemas.microsoft.com/BizTalk/2003"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://SuperFundManagement.Schemas.SuperContribution"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+  <xs:annotation>
+    <xs:appinfo>
+      <b:schemaInfo root_reference="SuperContributionRequest" xmlns:b="http://schemas.microsoft.com/BizTalk/2003" />
+    </xs:appinfo>
+  </xs:annotation>
+
+  <xs:element name="SuperContributionRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="ContributionId" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <b:fieldInfo xmlns:b="http://schemas.microsoft.com/BizTalk/2003" />
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="EmployerId" type="xs:string" />
+        <xs:element name="EmployerName" type="xs:string" />
+        <xs:element name="EmployerABN" type="xs:string" />
+        <xs:element name="PayPeriodEndDate" type="xs:date" />
+        <xs:element name="Members">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Member" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="MemberAccountNumber" type="xs:string" />
+                    <xs:element name="MemberName" type="xs:string" />
+                    <xs:element name="ContributionType" type="xs:string" />
+                    <xs:element name="GrossAmount" type="xs:decimal" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="TotalContribution" type="xs:decimal" />
+        <xs:element name="Currency" type="xs:string" default="AUD" />
+        <xs:element name="PaymentReference" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

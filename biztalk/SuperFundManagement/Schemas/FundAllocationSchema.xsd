@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-16"?>
+<xs:schema xmlns="http://SuperFundManagement.Schemas.FundAllocation"
+           xmlns:b="http://schemas.microsoft.com/BizTalk/2003"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://SuperFundManagement.Schemas.FundAllocation"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+  <xs:annotation>
+    <xs:appinfo>
+      <b:schemaInfo root_reference="FundAllocationInstruction" xmlns:b="http://schemas.microsoft.com/BizTalk/2003" />
+    </xs:appinfo>
+  </xs:annotation>
+
+  <xs:element name="FundAllocationInstruction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="AllocationId" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <b:fieldInfo xmlns:b="http://schemas.microsoft.com/BizTalk/2003" />
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="SourceContributionRef" type="xs:string" />
+        <xs:element name="EmployerDetails">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="EmployerId" type="xs:string" />
+              <xs:element name="EmployerName" type="xs:string" />
+              <xs:element name="ABN" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="AllocationDate" type="xs:date" />
+        <xs:element name="MemberAllocations">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Allocation" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="AccountNumber" type="xs:string" />
+                    <xs:element name="MemberName" type="xs:string" />
+                    <xs:element name="ContributionType" type="xs:string" />
+                    <xs:element name="ContributionAmount" type="xs:decimal" />
+                    <xs:element name="AllocationStatus" type="xs:string" default="PENDING" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="TotalAllocated" type="xs:decimal" />
+        <xs:element name="CurrencyCode" type="xs:string" />
+        <xs:element name="Status" type="xs:string" default="PENDING" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
