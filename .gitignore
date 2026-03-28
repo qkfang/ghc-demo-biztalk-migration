@@ -1,0 +1,17 @@
+# Build output
+**/bin/
+**/obj/
+*.user
+
+# .NET / Azure Functions
+local.settings.json
+*.suo
+*.user
+.vs/
+
+# Packages
+packages/
+
+# Publish
+publish/
+deploy.zip

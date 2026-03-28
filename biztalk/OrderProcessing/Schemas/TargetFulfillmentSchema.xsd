@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-16"?>
+<xs:schema xmlns="http://OrderProcessing.Schemas.FulfillmentOrder"
+           xmlns:b="http://schemas.microsoft.com/BizTalk/2003"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://OrderProcessing.Schemas.FulfillmentOrder"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+  <xs:annotation>
+    <xs:appinfo>
+      <b:schemaInfo root_reference="FulfillmentOrder" xmlns:b="http://schemas.microsoft.com/BizTalk/2003" />
+    </xs:appinfo>
+  </xs:annotation>
+
+  <xs:element name="FulfillmentOrder">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="FulfillmentId" type="xs:string">
+          <xs:annotation>
+            <xs:appinfo>
+              <b:fieldInfo xmlns:b="http://schemas.microsoft.com/BizTalk/2003" />
+            </xs:appinfo>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="SourceOrderRef" type="xs:string" />
+        <xs:element name="CustomerDetails">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Id" type="xs:string" />
+              <xs:element name="Name" type="xs:string" />
+              <xs:element name="Email" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="RequestedDate" type="xs:dateTime" />
+        <xs:element name="LineItems">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="LineItem" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="SKU" type="xs:string" />
+                    <xs:element name="Description" type="xs:string" />
+                    <xs:element name="Qty" type="xs:int" />
+                    <xs:element name="Price" type="xs:decimal" />
+                    <xs:element name="LineTotal" type="xs:decimal" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="OrderTotal" type="xs:decimal" />
+        <xs:element name="CurrencyCode" type="xs:string" />
+        <xs:element name="ShipTo">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="AddressLine1" type="xs:string" />
+              <xs:element name="City" type="xs:string" />
+              <xs:element name="StateProvince" type="xs:string" />
+              <xs:element name="PostalCode" type="xs:string" />
+              <xs:element name="CountryCode" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Status" type="xs:string" default="PENDING" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

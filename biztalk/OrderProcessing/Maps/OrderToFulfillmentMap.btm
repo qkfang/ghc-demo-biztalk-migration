@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapsource Name="OrderToFulfillmentMap"
+           BizTalkServerMapperTool_Version="2.0"
+           Version="2"
+           XRange="100"
+           YRange="420"
+           OmitXmlDeclaration="Yes"
+           MethodName="None"
+           OptimizeCode="No"
+           GenerateXsltWithoutExtensionObjects="No"
+           CopyProcessingInstructionsAndComments="No"
+           SourceSchemasList="OrderProcessing.Schemas.SourceOrder.OrderRequest"
+           TargetSchemasList="OrderProcessing.Schemas.FulfillmentOrder.FulfillmentOrder"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <SrcTree>
+    <Reference Name="OrderProcessing.Schemas.SourceOrder"
+               Location="Schemas\SourceOrderSchema.xsd" />
+  </SrcTree>
+
+  <TrgTree>
+    <Reference Name="OrderProcessing.Schemas.FulfillmentOrder"
+               Location="Schemas\TargetFulfillmentSchema.xsd" />
+  </TrgTree>
+
+  <!-- Functoid: String Concatenate for FulfillmentId = "FF-" + OrderId -->
+  <Functoid ID="1" functoid-id="104"
+            FunctoidType="StringConcatenate"
+            X="30" Y="20" W="32" H="16"
+            ConnectionType="0 1"
+            Label="Prefix FF- to OrderId">
+    <Input>
+      <Param Name="Constant" Value="FF-" Type="Constant" />
+      <Param Name="OrderId" Value="/OrderRequest/OrderId" Type="Link" />
+    </Input>
+  </Functoid>
+
+  <!-- Functoid: Multiplication for LineTotal = Quantity * UnitPrice -->
+  <Functoid ID="2" functoid-id="190"
+            FunctoidType="Multiplication"
+            X="30" Y="220" W="32" H="16"
+            ConnectionType="0 1"
+            Label="Calculate LineTotal">
+    <Input>
+      <Param Name="Quantity" Value="/OrderRequest/Items/Item/Quantity" Type="Link" />
+      <Param Name="UnitPrice" Value="/OrderRequest/Items/Item/UnitPrice" Type="Link" />
+    </Input>
+  </Functoid>
+
+  <!-- Direct Links -->
+  <Links>
+    <!-- FulfillmentId = concatenate("FF-", OrderId) via Functoid 1 -->
+    <Link ID="L01"
+          SourceNode="Functoid:1"
+          TargetNode="/FulfillmentOrder/FulfillmentId"
+          Label="FulfillmentId" />
+
+    <!-- SourceOrderRef = OrderId (direct) -->
+    <Link ID="L02"
+          SourceNode="/OrderRequest/OrderId"
+          TargetNode="/FulfillmentOrder/SourceOrderRef"
+          Label="SourceOrderRef" />
+
+    <!-- CustomerDetails/Id = CustomerId -->
+    <Link ID="L03"
+          SourceNode="/OrderRequest/CustomerId"
+          TargetNode="/FulfillmentOrder/CustomerDetails/Id"
+          Label="CustomerId" />
+
+    <!-- CustomerDetails/Name = CustomerName -->
+    <Link ID="L04"
+          SourceNode="/OrderRequest/CustomerName"
+          TargetNode="/FulfillmentOrder/CustomerDetails/Name"
+          Label="CustomerName" />
+
+    <!-- CustomerDetails/Email = CustomerEmail -->
+    <Link ID="L05"
+          SourceNode="/OrderRequest/CustomerEmail"
+          TargetNode="/FulfillmentOrder/CustomerDetails/Email"
+          Label="CustomerEmail" />
+
+    <!-- RequestedDate = OrderDate -->
+    <Link ID="L06"
+          SourceNode="/OrderRequest/OrderDate"
+          TargetNode="/FulfillmentOrder/RequestedDate"
+          Label="OrderDate" />
+
+    <!-- LineItem loop: Item → LineItem -->
+    <Link ID="L07"
+          SourceNode="/OrderRequest/Items/Item"
+          TargetNode="/FulfillmentOrder/LineItems/LineItem"
+          Label="ItemLoop"
+          LinkType="MatchLinks" />
+
+    <!-- SKU = ProductCode -->
+    <Link ID="L08"
+          SourceNode="/OrderRequest/Items/Item/ProductCode"
+          TargetNode="/FulfillmentOrder/LineItems/LineItem/SKU"
+          Label="SKU" />
+
+    <!-- Description = ProductName -->
+    <Link ID="L09"
+          SourceNode="/OrderRequest/Items/Item/ProductName"
+          TargetNode="/FulfillmentOrder/LineItems/LineItem/Description"
+          Label="Description" />
+
+    <!-- Qty = Quantity -->
+    <Link ID="L10"
+          SourceNode="/OrderRequest/Items/Item/Quantity"
+          TargetNode="/FulfillmentOrder/LineItems/LineItem/Qty"
+          Label="Qty" />
+
+    <!-- Price = UnitPrice -->
+    <Link ID="L11"
+          SourceNode="/OrderRequest/Items/Item/UnitPrice"
+          TargetNode="/FulfillmentOrder/LineItems/LineItem/Price"
+          Label="Price" />
+
+    <!-- LineTotal = Quantity * UnitPrice via Functoid 2 -->
+    <Link ID="L12"
+          SourceNode="Functoid:2"
+          TargetNode="/FulfillmentOrder/LineItems/LineItem/LineTotal"
+          Label="LineTotal" />
+
+    <!-- OrderTotal = TotalAmount -->
+    <Link ID="L13"
+          SourceNode="/OrderRequest/TotalAmount"
+          TargetNode="/FulfillmentOrder/OrderTotal"
+          Label="OrderTotal" />
+
+    <!-- CurrencyCode = Currency -->
+    <Link ID="L14"
+          SourceNode="/OrderRequest/Currency"
+          TargetNode="/FulfillmentOrder/CurrencyCode"
+          Label="CurrencyCode" />
+
+    <!-- ShipTo/AddressLine1 = ShippingAddress/Street -->
+    <Link ID="L15"
+          SourceNode="/OrderRequest/ShippingAddress/Street"
+          TargetNode="/FulfillmentOrder/ShipTo/AddressLine1"
+          Label="AddressLine1" />
+
+    <!-- ShipTo/City = ShippingAddress/City -->
+    <Link ID="L16"
+          SourceNode="/OrderRequest/ShippingAddress/City"
+          TargetNode="/FulfillmentOrder/ShipTo/City"
+          Label="City" />
+
+    <!-- ShipTo/StateProvince = ShippingAddress/State -->
+    <Link ID="L17"
+          SourceNode="/OrderRequest/ShippingAddress/State"
+          TargetNode="/FulfillmentOrder/ShipTo/StateProvince"
+          Label="StateProvince" />
+
+    <!-- ShipTo/PostalCode = ShippingAddress/ZipCode -->
+    <Link ID="L18"
+          SourceNode="/OrderRequest/ShippingAddress/ZipCode"
+          TargetNode="/FulfillmentOrder/ShipTo/PostalCode"
+          Label="PostalCode" />
+
+    <!-- ShipTo/CountryCode = ShippingAddress/Country -->
+    <Link ID="L19"
+          SourceNode="/OrderRequest/ShippingAddress/Country"
+          TargetNode="/FulfillmentOrder/ShipTo/CountryCode"
+          Label="CountryCode" />
+
+    <!-- Status = constant "PENDING" -->
+    <Link ID="L20"
+          SourceNode="Constant:PENDING"
+          TargetNode="/FulfillmentOrder/Status"
+          Label="Status" />
+  </Links>
+
+  <ExtractedPropertyNames>
+    <ExtractedPropertyName
+      PropertyName="OrderProcessing.Schemas.SourceOrder.OrderId"
+      NodePath="/OrderRequest/OrderId"
+      FullName="OrderProcessing.Schemas.SourceOrder.OrderId" />
+    <ExtractedPropertyName
+      PropertyName="OrderProcessing.Schemas.FulfillmentOrder.FulfillmentId"
+      NodePath="/FulfillmentOrder/FulfillmentId"
+      FullName="OrderProcessing.Schemas.FulfillmentOrder.FulfillmentId" />
+  </ExtractedPropertyNames>
+
+</mapsource>
