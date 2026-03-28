@@ -1,0 +1,92 @@
+<Project DefaultTargets="Deploy" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>OrderProcessing</RootNamespace>
+    <AssemblyName>OrderProcessing</AssemblyName>
+    <ApplicationDescription>Order Processing BizTalk Application</ApplicationDescription>
+    <ApplicationName>OrderProcessing</ApplicationName>
+    <WarningLevel>4</WarningLevel>
+    <BizTalkVersion>3.13.843.0</BizTalkVersion>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+    <DeployBizTalkMgmtDB>true</DeployBizTalkMgmtDB>
+    <RegisterWithIIS>false</RegisterWithIIS>
+    <EnableUnitTesting>false</EnableUnitTesting>
+    <SuppressIISResetOnDeploy>false</SuppressIISResetOnDeploy>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.BizTalk.DefaultPipelines, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.BizTalk.DefaultPipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.BizTalk.GlobalPropertySchemas, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.BizTalk.GlobalPropertySchemas.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.BizTalk.Pipeline, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.BizTalk.Pipeline.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.BizTalk.Messaging, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.BizTalk.Messaging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.BizTalk.XLANGs.BTXEngine, Version=3.0.1.0, Culture=neutral, PublicKeyToken=8f56ec048e2fe18a">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.BizTalk.XLANGs.BTXEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.XLANGs.BaseTypes, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.XLANGs.BaseTypes.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.BizTalk.Adapter.Framework, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>$(BizTalkInstallPath)\Microsoft.BizTalk.Adapter.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Web.Services" />
+  </ItemGroup>
+  <ItemGroup>
+    <BtsContent Include="Schemas\SourceOrderSchema.xsd">
+      <ItemType>Schema</ItemType>
+      <SubType>Schema</SubType>
+    </BtsContent>
+    <BtsContent Include="Schemas\TargetFulfillmentSchema.xsd">
+      <ItemType>Schema</ItemType>
+      <SubType>Schema</SubType>
+    </BtsContent>
+    <BtsContent Include="Maps\OrderToFulfillmentMap.btm">
+      <ItemType>Map</ItemType>
+      <SubType>Map</SubType>
+    </BtsContent>
+    <BtsContent Include="Orchestrations\OrderProcessingOrchestration.odx">
+      <ItemType>Orchestration</ItemType>
+      <SubType>Orchestration</SubType>
+    </BtsContent>
+    <BtsContent Include="Pipelines\HttpReceivePipeline.btp">
+      <ItemType>ReceivePipeline</ItemType>
+      <SubType>Pipeline</SubType>
+    </BtsContent>
+    <BtsContent Include="Pipelines\HttpSendPipeline.btp">
+      <ItemType>SendPipeline</ItemType>
+      <SubType>Pipeline</SubType>
+    </BtsContent>
+  </ItemGroup>
+  <Import Project="$(BizTalkInstallPath)\MSBuild\BizTalkBuildTargets.targets" Condition="Exists('$(BizTalkInstallPath)\MSBuild\BizTalkBuildTargets.targets')" />
+</Project>

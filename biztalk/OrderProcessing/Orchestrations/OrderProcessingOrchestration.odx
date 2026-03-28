@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<om:Module xmlns:om="http://schemas.microsoft.com/BizTalk/2003/DesignerData"
+           xmlns:bt="http://schemas.microsoft.com/BizTalk/2003/BizTalkOrchestration"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           Name="OrderProcessingOrchestration"
+           Namespace="OrderProcessing.Orchestrations"
+           Version="1.0.0.0">
+
+  <om:PartBody>
+    <bt:OrchestrationType IsWebService="false" IsWebClientOrchestration="false">
+
+      <!-- ==================== Message Declarations ==================== -->
+      <bt:Message Name="OrderRequestMsg" Type="OrderProcessing.Schemas.SourceOrder.OrderRequest">
+        <bt:MessageProperty IsDistinguished="true" PropName="OrderId"
+                            PropNamespace="OrderProcessing.Schemas.SourceOrder" />
+      </bt:Message>
+
+      <bt:Message Name="FulfillmentOrderMsg" Type="OrderProcessing.Schemas.FulfillmentOrder.FulfillmentOrder">
+        <bt:MessageProperty IsDistinguished="true" PropName="FulfillmentId"
+                            PropNamespace="OrderProcessing.Schemas.FulfillmentOrder" />
+      </bt:Message>
+
+      <!-- ==================== Port Declarations ==================== -->
+      <bt:Port Name="ReceiveOrderPort"
+               Polarity="Implements"
+               Modifier="Public"
+               TypeName="IReceiveOrderPortType">
+        <bt:PortTypeRef Namespace="OrderProcessing.Orchestrations"
+                        Name="IReceiveOrderPortType" />
+      </bt:Port>
+
+      <bt:Port Name="SendFulfillmentPort"
+               Polarity="Uses"
+               Modifier="Public"
+               TypeName="ISendFulfillmentPortType">
+        <bt:PortTypeRef Namespace="OrderProcessing.Orchestrations"
+                        Name="ISendFulfillmentPortType" />
+      </bt:Port>
+
+      <!-- ==================== Port Types ==================== -->
+      <bt:PortType Name="IReceiveOrderPortType"
+                   Modifier="Internal"
+                   IsWebService="false">
+        <bt:PortOperation Name="ReceiveOrder"
+                          Direction="Receive"
+                          MessageType="OrderProcessing.Schemas.SourceOrder.OrderRequest">
+          <bt:Message Name="OrderRequestMsg" />
+        </bt:PortOperation>
+      </bt:PortType>
+
+      <bt:PortType Name="ISendFulfillmentPortType"
+                   Modifier="Internal"
+                   IsWebService="false">
+        <bt:PortOperation Name="SendFulfillment"
+                          Direction="Send"
+                          MessageType="OrderProcessing.Schemas.FulfillmentOrder.FulfillmentOrder">
+          <bt:Message Name="FulfillmentOrderMsg" />
+        </bt:PortOperation>
+      </bt:PortType>
+
+      <!-- ==================== Correlation Sets ==================== -->
+      <bt:CorrelationDeclaration Name="OrderCorrelationSet"
+                                 CorrelationType="OrderProcessing.Orchestrations.OrderCorrelationType">
+      </bt:CorrelationDeclaration>
+
+      <bt:CorrelationType Name="OrderCorrelationType">
+        <bt:Property Name="OrderProcessing.Schemas.SourceOrder.OrderId" />
+      </bt:CorrelationType>
+
+      <!-- ==================== Orchestration Body ==================== -->
+      <bt:Body>
+
+        <!-- Shape: Receive – Activates the orchestration on incoming HTTP message -->
+        <bt:Receive Name="ReceiveOrder"
+                    ActivationReceive="true"
+                    OperationName="ReceiveOrder"
+                    PortName="ReceiveOrderPort"
+                    Message="OrderRequestMsg"
+                    Shape="Receive">
+          <bt:InitCorrelation Name="OrderCorrelationSet" />
+        </bt:Receive>
+
+        <!-- Shape: Construct – Build FulfillmentOrderMsg using OrderToFulfillmentMap -->
+        <bt:Construct Name="ConstructFulfillmentOrder"
+                      Shape="ConstructMessage">
+          <bt:Message Name="FulfillmentOrderMsg" />
+          <bt:Transform Name="TransformOrderToFulfillment"
+                        Shape="Transform"
+                        SourceMessage="OrderRequestMsg"
+                        TargetMessage="FulfillmentOrderMsg"
+                        MapName="OrderProcessing.Maps.OrderToFulfillmentMap" />
+        </bt:Construct>
+
+        <!-- Shape: Send – Post transformed message to downstream HTTP endpoint -->
+        <bt:Send Name="SendFulfillmentOrder"
+                 OperationName="SendFulfillment"
+                 PortName="SendFulfillmentPort"
+                 Message="FulfillmentOrderMsg"
+                 Shape="Send">
+          <bt:FollowCorrelation Name="OrderCorrelationSet" />
+        </bt:Send>
+
+      </bt:Body>
+
+    </bt:OrchestrationType>
+  </om:PartBody>
+
+</om:Module>

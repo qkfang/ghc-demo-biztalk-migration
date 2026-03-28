@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BindingInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             Assembly="Microsoft.BizTalk.Deployment, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
+             Version="3.5.1.0"
+             BindingStatus="FullyBound"
+             BizTalkServerVersion="3.13.843.0">
+  <Description>BizTalk binding file for OrderProcessing application</Description>
+
+  <!-- ==================== Receive Ports ==================== -->
+  <ModuleRefCollection>
+    <ModuleRef Name="[Application:OrderProcessing]" FullName="[Application:OrderProcessing]"
+               UniqueID="{C1D2E3F4-A5B6-7890-CDFE-123456789ABC}">
+      <Services>
+        <Service Name="OrderProcessing.Orchestrations.OrderProcessingOrchestration"
+                 State="Enlisted"
+                 Host="BizTalkServerApplication"
+                 Tracking="None">
+          <Ports>
+            <Port Name="ReceiveOrderPort" Modifier="Public" Direction="Receive"
+                  Binding="Specify Later" SendPortRef="" ReceivePortRef="OrderHttpReceive" />
+            <Port Name="SendFulfillmentPort" Modifier="Public" Direction="Send"
+                  Binding="Specify Later" SendPortRef="FulfillmentHttpSend" ReceivePortRef="" />
+          </Ports>
+        </Service>
+      </Services>
+    </ModuleRef>
+  </ModuleRefCollection>
+
+  <!-- ==================== Receive Ports ==================== -->
+  <ReceivePortCollection>
+    <ReceivePort Name="OrderHttpReceive"
+                 IsTwoWay="false"
+                 BindingOption="0">
+      <Description>HTTP receive port listening for order XML messages on port 7070</Description>
+      <ReceiveLocations>
+        <ReceiveLocation Name="OrderHttpReceive_Location"
+                         Enable="true"
+                         Address="/OrderProcessing/Receive"
+                         PublicAddress=""
+                         TransportType="HTTP"
+                         TransportTypeData="&lt;CustomProps&gt;&lt;UseSSO vt=&quot;11&quot;&gt;0&lt;/UseSSL&gt;&lt;ReturnCorrelationHandle vt=&quot;11&quot;&gt;0&lt;/ReturnCorrelationHandle&gt;&lt;ResponseContentType vt=&quot;8&quot;&gt;text/xml&lt;/ResponseContentType&gt;&lt;LoopBack vt=&quot;11&quot;&gt;0&lt;/LoopBack&gt;&lt;/CustomProps&gt;"
+                         ReceiveHandlerName="BizTalkServerApplication"
+                         ReceiveHandlerTransportType="HTTP"
+                         ScheduleStartDate="1899-12-30T00:00:00"
+                         ScheduleEndDate="1899-12-30T00:00:00"
+                         ServiceWindowEnabled="false">
+          <ReceivePipeline Name="OrderProcessing.Pipelines.HttpReceivePipeline"
+                           FullyQualifiedName="OrderProcessing.Pipelines.HttpReceivePipeline, OrderProcessing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+                           Type="1"
+                           TrackingOption="ServiceStartEnd" />
+          <ReceivePipelineData>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-16&quot;?&gt;&lt;Root xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;&lt;Stages&gt;&lt;/Stages&gt;&lt;/Root&gt;</ReceivePipelineData>
+        </ReceiveLocation>
+      </ReceiveLocations>
+      <OutboundTransforms />
+      <InboundTransforms />
+    </ReceivePort>
+  </ReceivePortCollection>
+
+  <!-- ==================== Send Ports ==================== -->
+  <SendPortCollection>
+    <SendPort Name="FulfillmentHttpSend"
+              IsStatic="true"
+              IsTwoWay="false"
+              BindingOption="0">
+      <Description>HTTP send port for posting fulfillment orders to downstream service</Description>
+      <PrimaryTransport>
+        <Address>http://downstream-service/api/fulfillment</Address>
+        <TransportType>HTTP</TransportType>
+        <TransportTypeData>&lt;CustomProps&gt;&lt;UseHandlerProxySettings vt=&quot;11&quot;&gt;-1&lt;/UseHandlerProxySettings&gt;&lt;UseSSO vt=&quot;11&quot;&gt;0&lt;/UseSSO&gt;&lt;MaxRedirects vt=&quot;3&quot;&gt;5&lt;/MaxRedirects&gt;&lt;ContentType vt=&quot;8&quot;&gt;application/xml&lt;/ContentType&gt;&lt;Username vt=&quot;8&quot;&gt;&lt;/Username&gt;&lt;Password vt=&quot;8&quot;&gt;&lt;/Password&gt;&lt;Certificate vt=&quot;8&quot;&gt;&lt;/Certificate&gt;&lt;RequestTimeout vt=&quot;3&quot;&gt;30000&lt;/RequestTimeout&gt;&lt;/CustomProps&gt;</TransportTypeData>
+        <RetryCount>3</RetryCount>
+        <RetryInterval>5</RetryInterval>
+        <ServiceWindowEnabled>false</ServiceWindowEnabled>
+      </PrimaryTransport>
+      <SendPipeline Name="OrderProcessing.Pipelines.HttpSendPipeline"
+                    FullyQualifiedName="OrderProcessing.Pipelines.HttpSendPipeline, OrderProcessing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+                    Type="2"
+                    TrackingOption="ServiceStartEnd" />
+      <SendPipelineData>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-16&quot;?&gt;&lt;Root xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;&lt;Stages&gt;&lt;/Stages&gt;&lt;/Root&gt;</SendPipelineData>
+      <EncryptionCert />
+      <Transforms>
+        <Transform Name="OrderProcessing.Maps.OrderToFulfillmentMap"
+                   FullName="OrderProcessing.Maps.OrderToFulfillmentMap, OrderProcessing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+      </Transforms>
+      <Filter>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-16&quot;?&gt;&lt;Filter xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;&lt;Group&gt;&lt;Statement Property=&quot;BTS.ReceivePortName&quot; Operator=&quot;0&quot; Value=&quot;OrderHttpReceive&quot; /&gt;&lt;/Group&gt;&lt;/Filter&gt;</Filter>
+    </SendPort>
+  </SendPortCollection>
+
+  <!-- ==================== Parties ==================== -->
+  <PartyCollection />
+
+  <!-- ==================== Distributed Party ==================== -->
+  <DistributionListCollection />
+
+</BindingInfo>
