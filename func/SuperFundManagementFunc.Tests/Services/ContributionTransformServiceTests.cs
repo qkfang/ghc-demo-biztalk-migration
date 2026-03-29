@@ -1,3 +1,4 @@
+using SuperFundManagementFunc.Helpers;
 using SuperFundManagementFunc.Models;
 using SuperFundManagementFunc.Services;
 using Xunit;
@@ -48,7 +49,8 @@ public class ContributionTransformServiceTests
 
         Assert.Equal(contribution.EmployerId, result.EmployerDetails.EmployerId);
         Assert.Equal(contribution.EmployerName, result.EmployerDetails.EmployerName);
-        Assert.Equal(contribution.EmployerABN, result.EmployerDetails.ABN);
+        // Scripting Functoid 3 (FormatABN): raw digits → "XX XXX XXX XXX"
+        Assert.Equal("51 824 753 556", result.EmployerDetails.ABN);
     }
 
     [Fact]
@@ -64,12 +66,14 @@ public class ContributionTransformServiceTests
         Assert.Equal("SF-100001", first.AccountNumber);
         Assert.Equal("Jane Smith", first.MemberName);
         Assert.Equal("SuperannuationGuarantee", first.ContributionType);
-        Assert.Equal(875.00m, first.ContributionAmount);
+        // Scripting Functoid 4 (CalculateNetContribution): 875.00 × 0.85 = 743.75
+        Assert.Equal(743.75m, first.ContributionAmount);
         Assert.Equal("PENDING", first.AllocationStatus);
 
         var second = result.MemberAllocations.Allocation[1];
         Assert.Equal("SF-100002", second.AccountNumber);
-        Assert.Equal(750.00m, second.ContributionAmount);
+        // Scripting Functoid 4 (CalculateNetContribution): 750.00 × 0.85 = 637.50
+        Assert.Equal(637.50m, second.ContributionAmount);
     }
 
     [Fact]
@@ -127,5 +131,77 @@ public class ContributionTransformServiceTests
     public void Transform_ThrowsArgumentNullException_WhenContributionIsNull()
     {
         Assert.Throws<ArgumentNullException>(() => _sut.Transform(null!));
+    }
+}
+
+/// <summary>
+/// Unit tests for <see cref="ContributionMapHelper"/> — the Azure Functions equivalent
+/// of the BizTalk Scripting Functoid helper methods.
+/// </summary>
+public class ContributionMapHelperTests
+{
+    // ── FormatABN (Scripting Functoid 3) ─────────────────────────────────────
+
+    [Fact]
+    public void FormatABN_FormatsElevenDigitsWithSpaces()
+    {
+        var result = ContributionMapHelper.FormatABN("51824753556");
+        Assert.Equal("51 824 753 556", result);
+    }
+
+    [Fact]
+    public void FormatABN_StripsExistingSpacesBeforeFormatting()
+    {
+        var result = ContributionMapHelper.FormatABN("51 824 753 556");
+        Assert.Equal("51 824 753 556", result);
+    }
+
+    [Fact]
+    public void FormatABN_StripsHyphensBeforeFormatting()
+    {
+        var result = ContributionMapHelper.FormatABN("51-824-753-556");
+        Assert.Equal("51 824 753 556", result);
+    }
+
+    [Fact]
+    public void FormatABN_ReturnsOriginal_WhenNotElevenDigits()
+    {
+        const string shortAbn = "1234567";
+        var result = ContributionMapHelper.FormatABN(shortAbn);
+        Assert.Equal(shortAbn, result);
+    }
+
+    [Fact]
+    public void FormatABN_ReturnsEmpty_WhenInputIsEmpty()
+    {
+        Assert.Equal(string.Empty, ContributionMapHelper.FormatABN(string.Empty));
+    }
+
+    [Fact]
+    public void FormatABN_ReturnsEmpty_WhenInputIsNull()
+    {
+        Assert.Equal(string.Empty, ContributionMapHelper.FormatABN(null!));
+    }
+
+    // ── CalculateNetContribution (Scripting Functoid 4) ──────────────────────
+
+    [Fact]
+    public void CalculateNetContribution_Applies15PercentTax()
+    {
+        // 875.00 × 0.85 = 743.75
+        Assert.Equal(743.75m, ContributionMapHelper.CalculateNetContribution(875.00m));
+    }
+
+    [Fact]
+    public void CalculateNetContribution_RoundsToTwoDecimalPlaces()
+    {
+        // 100.01 × 0.85 = 85.0085 → rounds to 85.01
+        Assert.Equal(85.01m, ContributionMapHelper.CalculateNetContribution(100.01m));
+    }
+
+    [Fact]
+    public void CalculateNetContribution_ReturnsZero_WhenGrossIsZero()
+    {
+        Assert.Equal(0.00m, ContributionMapHelper.CalculateNetContribution(0m));
     }
 }
