@@ -33,7 +33,7 @@ Azure Functions scales **automatically** and **instantly** — from 0 to hundred
 ```
 HTTP Client
     │
-    │ POST /OrderProcessing/Receive (port 7070)
+    │ POST /SuperFundManagement/Receive (port 7070)
     ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │  BizTalk Server 2020                                                 │
@@ -47,16 +47,16 @@ HTTP Client
 │  MessageBox (SQL Server)                                             │
 │      │                                                               │
 │      ▼                                                               │
-│  Orchestration (OrderProcessingOrchestration.odx)                   │
+│  Orchestration (SuperFundManagementOrchestration.odx)                   │
 │      ├─ Receive shape                                                │
-│      ├─ Construct/Transform shape (OrderToFulfillmentMap.btm)        │
+│      ├─ Construct/Transform shape (ContributionToAllocationMap.btm)        │
 │      └─ Send shape                                                   │
 │      │                                                               │
 │      ▼                                                               │
 │  MessageBox (SQL Server)                                             │
 │      │                                                               │
 │      ▼                                                               │
-│  Send Port (FulfillmentHttpSend)                                     │
+│  Send Port (AllocationHttpSend)                                     │
 │      │ HttpSendPipeline (XML Assembler)                              │
 │      │ HTTP Adapter                                                   │
 └──────────────────────────────────────────────────────────────────────┘
@@ -71,20 +71,20 @@ Downstream Fulfillment Service
 ```
 HTTP Client
     │
-    │ POST /api/orders
+    │ POST /api/contributions
     ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │  Azure Functions (Consumption Plan)                                  │
 │                                                                      │
-│  HTTP Trigger: OrderProcessingFunction.ProcessOrder()                │
+│  HTTP Trigger: SuperContributionFunction.ProcessContribution()                │
 │      │                                                               │
-│      ├─ Deserialize XML → SourceOrder (XmlSerializer)                │
-│      ├─ Validate (OrderId, CustomerId, Items)                        │
-│      ├─ IOrderTransformService.Transform()                           │
-│      │       (equivalent of OrderToFulfillmentMap.btm)              │
-│      ├─ IFulfillmentSenderService.SendAsync()                        │
-│      │       (equivalent of FulfillmentHttpSend port)               │
-│      └─ Return 202 Accepted { fulfillmentId, status }                │
+│      ├─ Deserialize XML → SuperContribution (XmlSerializer)                │
+│      ├─ Validate (ContributionId, EmployerId, Members)                        │
+│      ├─ IContributionTransformService.Transform()                           │
+│      │       (equivalent of ContributionToAllocationMap.btm)              │
+│      ├─ IFundAllocationSenderService.SendAsync()                        │
+│      │       (equivalent of AllocationHttpSend port)               │
+│      └─ Return 202 Accepted { allocationId, status }                │
 └──────────────────────────────────────────────────────────────────────┘
     │
     │ POST https://downstream-service/api/fulfillment
@@ -102,13 +102,13 @@ Downstream Fulfillment Service
 | Receive Pipeline (XML Disassembler)| `XmlSerializer.Deserialize()` in function body                  |
 | MessageBox                         | Function parameter / in-memory object                           |
 | Orchestration                      | Azure Function class method                                     |
-| Message Construction shape         | C# object instantiation (`new FulfillmentOrder { ... }`)        |
-| Transform shape + `.btm` map file  | `IOrderTransformService.Transform()` method                     |
-| String Concatenate functoid        | C# string interpolation: `$"FF-{order.OrderId}"`               |
+| Message Construction shape         | C# object instantiation (`new FundAllocationInstruction { ... }`)        |
+| Transform shape + `.btm` map file  | `IContributionTransformService.Transform()` method                     |
+| String Concatenate functoid        | C# string interpolation: `$"FA-{contribution.ContributionId}"`               |
 | Multiplication functoid            | C# arithmetic: `item.Quantity * item.UnitPrice`                 |
 | Looping functoid                   | LINQ `.Select()` on `Items.Item`                                |
-| Send Pipeline (XML Assembler)      | `XmlSerializer.Serialize()` in `FulfillmentSenderService`       |
-| HTTP Send Port                     | `IFulfillmentSenderService.SendAsync()` via `HttpClient`        |
+| Send Pipeline (XML Assembler)      | `XmlSerializer.Serialize()` in `FundAllocationSenderService`       |
+| HTTP Send Port                     | `IFundAllocationSenderService.SendAsync()` via `HttpClient`        |
 | Binding File                       | `local.settings.json` / Azure App Settings                      |
 | BTSTask deploy                     | `az functionapp deployment source config-zip`                   |
 | BizTalk Admin Console              | Azure Portal / Azure CLI                                        |
@@ -121,16 +121,16 @@ Downstream Fulfillment Service
 ### Step 1: Understand the Existing BizTalk Solution
 
 1. Export and review the current binding file (`BindingFile.xml`)
-2. Open `OrderProcessingOrchestration.odx` in Visual Studio to map the orchestration flow
+2. Open `SuperFundManagementOrchestration.odx` in Visual Studio to map the orchestration flow
 3. Test the existing BizTalk solution with sample XML to capture expected inputs/outputs
-4. Document the XSD schemas (`SourceOrderSchema.xsd`, `TargetFulfillmentSchema.xsd`)
+4. Document the XSD schemas (`SuperContributionSchema.xsd`, `FundAllocationSchema.xsd`)
 5. Export the XSLT generated from the BizTalk map (right-click `.btm` → Validate/Test Map)
 
 ### Step 2: Create the Azure Functions Project
 
 1. Create a new .NET 8 isolated Azure Functions project:
    ```bash
-   func init OrderProcessingFunc --worker-runtime dotnet-isolated --target-framework net8.0
+   func init SuperFundManagementFunc --worker-runtime dotnet-isolated --target-framework net8.0
    ```
 2. Add required NuGet packages:
    ```bash
@@ -140,29 +140,29 @@ Downstream Fulfillment Service
 
 ### Step 3: Port the Data Models
 
-1. Create `SourceOrder.cs` — mirror of `SourceOrderSchema.xsd` with `[XmlRoot]`/`[XmlElement]` attributes
-2. Create `FulfillmentOrder.cs` — mirror of `TargetFulfillmentSchema.xsd`
+1. Create `SuperContribution.cs` — mirror of `SuperContributionSchema.xsd` with `[XmlRoot]`/`[XmlElement]` attributes
+2. Create `FundAllocationInstruction.cs` — mirror of `FundAllocationSchema.xsd`
 3. Validate by serializing/deserializing the sample XML documents captured in Step 1
 
 ### Step 4: Implement the Transformation Service
 
-1. Create `IOrderTransformService` interface
-2. Implement `OrderTransformService`:
-   - Replace String Concatenate functoid: `"FF-" + order.OrderId`
+1. Create `IContributionTransformService` interface
+2. Implement `ContributionTransformService`:
+   - Replace String Concatenate functoid: `"FA-" + contribution.ContributionId`
    - Replace Multiplication functoid: `item.Quantity * item.UnitPrice`
    - Replace Looping functoid: `.Select(item => new LineItem { ... })`
 3. Write unit tests for each transformation rule
 
 ### Step 5: Implement the Fulfillment Sender Service
 
-1. Create `IFulfillmentSenderService` interface
-2. Implement `FulfillmentSenderService` using `IHttpClientFactory`
+1. Create `IFundAllocationSenderService` interface
+2. Implement `FundAllocationSenderService` using `IHttpClientFactory`
 3. Register `AddHttpClient()` in `Program.cs`
 4. Read target URL from configuration (`FulfillmentServiceUrl`)
 
 ### Step 6: Implement the HTTP Trigger Function
 
-1. Create `OrderProcessingFunction` with `[HttpTrigger("post", Route = "orders")]`
+1. Create `SuperFundManagementFunction` with `[HttpTrigger("post", Route = "orders")]`
 2. Implement: deserialize XML → validate → transform → send → return 202
 3. Add proper error handling: 400 for validation, 502 for downstream failure
 
@@ -189,7 +189,7 @@ Downstream Fulfillment Service
 ### Step 10: Deploy Function Code
 
 ```bash
-cd func/OrderProcessingFunc
+cd func/SuperFundManagementFunc
 dotnet publish -c Release -o ./publish
 cd publish && zip -r ../deploy.zip .
 az functionapp deployment source config-zip \
@@ -243,5 +243,5 @@ While running both systems in parallel, maintain a feature flag or DNS-level rou
 
 1. Keep BizTalk application in `Enlisted` state (not `Started`)
 2. If Azure Functions reports errors in Application Insights, update DNS/load balancer to route back to BizTalk endpoint
-3. `BTSTask StartApplication /ApplicationName:OrderProcessing` to re-activate BizTalk
+3. `BTSTask StartApplication /ApplicationName:SuperFundManagement` to re-activate BizTalk
 4. Investigate and fix the Azure Functions issue, then re-cut over

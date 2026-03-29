@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapsource Name="ContributionToAllocationMap"
+           BizTalkServerMapperTool_Version="2.0"
+           Version="2"
+           XRange="100"
+           YRange="420"
+           OmitXmlDeclaration="Yes"
+           MethodName="None"
+           OptimizeCode="No"
+           GenerateXsltWithoutExtensionObjects="No"
+           CopyProcessingInstructionsAndComments="No"
+           SourceSchemasList="SuperFundManagement.Schemas.SuperContribution.SuperContributionRequest"
+           TargetSchemasList="SuperFundManagement.Schemas.FundAllocation.FundAllocationInstruction"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <SrcTree>
+    <Reference Name="SuperFundManagement.Schemas.SuperContribution"
+               Location="Schemas\SuperContributionSchema.xsd" />
+  </SrcTree>
+
+  <TrgTree>
+    <Reference Name="SuperFundManagement.Schemas.FundAllocation"
+               Location="Schemas\FundAllocationSchema.xsd" />
+  </TrgTree>
+
+  <!-- Functoid: String Concatenate for AllocationId = "FA-" + ContributionId -->
+  <Functoid ID="1" functoid-id="104"
+            FunctoidType="StringConcatenate"
+            X="30" Y="20" W="32" H="16"
+            ConnectionType="0 1"
+            Label="Prefix FA- to ContributionId">
+    <Input>
+      <Param Name="Constant" Value="FA-" Type="Constant" />
+      <Param Name="ContributionId" Value="/SuperContributionRequest/ContributionId" Type="Link" />
+    </Input>
+  </Functoid>
+
+  <!-- Functoid: Constant for AllocationStatus = "PENDING" -->
+  <Functoid ID="2" functoid-id="100"
+            FunctoidType="StringConstant"
+            X="30" Y="220" W="32" H="16"
+            ConnectionType="0 1"
+            Label="AllocationStatus constant">
+    <Input>
+      <Param Name="Constant" Value="PENDING" Type="Constant" />
+    </Input>
+  </Functoid>
+
+  <!-- Direct Links -->
+  <Links>
+    <!-- AllocationId = concatenate("FA-", ContributionId) via Functoid 1 -->
+    <Link ID="L01"
+          SourceNode="Functoid:1"
+          TargetNode="/FundAllocationInstruction/AllocationId"
+          Label="AllocationId" />
+
+    <!-- SourceContributionRef = ContributionId (direct) -->
+    <Link ID="L02"
+          SourceNode="/SuperContributionRequest/ContributionId"
+          TargetNode="/FundAllocationInstruction/SourceContributionRef"
+          Label="SourceContributionRef" />
+
+    <!-- EmployerDetails/EmployerId = EmployerId -->
+    <Link ID="L03"
+          SourceNode="/SuperContributionRequest/EmployerId"
+          TargetNode="/FundAllocationInstruction/EmployerDetails/EmployerId"
+          Label="EmployerId" />
+
+    <!-- EmployerDetails/EmployerName = EmployerName -->
+    <Link ID="L04"
+          SourceNode="/SuperContributionRequest/EmployerName"
+          TargetNode="/FundAllocationInstruction/EmployerDetails/EmployerName"
+          Label="EmployerName" />
+
+    <!-- EmployerDetails/ABN = EmployerABN -->
+    <Link ID="L05"
+          SourceNode="/SuperContributionRequest/EmployerABN"
+          TargetNode="/FundAllocationInstruction/EmployerDetails/ABN"
+          Label="ABN" />
+
+    <!-- AllocationDate = PayPeriodEndDate -->
+    <Link ID="L06"
+          SourceNode="/SuperContributionRequest/PayPeriodEndDate"
+          TargetNode="/FundAllocationInstruction/AllocationDate"
+          Label="AllocationDate" />
+
+    <!-- Member loop: Member → Allocation -->
+    <Link ID="L07"
+          SourceNode="/SuperContributionRequest/Members/Member"
+          TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation"
+          Label="MemberLoop"
+          LinkType="MatchLinks" />
+
+    <!-- AccountNumber = MemberAccountNumber -->
+    <Link ID="L08"
+          SourceNode="/SuperContributionRequest/Members/Member/MemberAccountNumber"
+          TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/AccountNumber"
+          Label="AccountNumber" />
+
+    <!-- MemberName = MemberName -->
+    <Link ID="L09"
+          SourceNode="/SuperContributionRequest/Members/Member/MemberName"
+          TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/MemberName"
+          Label="MemberName" />
+
+    <!-- ContributionType = ContributionType -->
+    <Link ID="L10"
+          SourceNode="/SuperContributionRequest/Members/Member/ContributionType"
+          TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/ContributionType"
+          Label="ContributionType" />
+
+    <!-- ContributionAmount = GrossAmount -->
+    <Link ID="L11"
+          SourceNode="/SuperContributionRequest/Members/Member/GrossAmount"
+          TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/ContributionAmount"
+          Label="ContributionAmount" />
+
+    <!-- AllocationStatus = constant "PENDING" via Functoid 2 -->
+    <Link ID="L12"
+          SourceNode="Functoid:2"
+          TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/AllocationStatus"
+          Label="AllocationStatus" />
+
+    <!-- TotalAllocated = TotalContribution -->
+    <Link ID="L13"
+          SourceNode="/SuperContributionRequest/TotalContribution"
+          TargetNode="/FundAllocationInstruction/TotalAllocated"
+          Label="TotalAllocated" />
+
+    <!-- CurrencyCode = Currency -->
+    <Link ID="L14"
+          SourceNode="/SuperContributionRequest/Currency"
+          TargetNode="/FundAllocationInstruction/CurrencyCode"
+          Label="CurrencyCode" />
+
+    <!-- Status = constant "PENDING" -->
+    <Link ID="L15"
+          SourceNode="Constant:PENDING"
+          TargetNode="/FundAllocationInstruction/Status"
+          Label="Status" />
+  </Links>
+
+  <ExtractedPropertyNames>
+    <ExtractedPropertyName
+      PropertyName="SuperFundManagement.Schemas.SuperContribution.ContributionId"
+      NodePath="/SuperContributionRequest/ContributionId"
+      FullName="SuperFundManagement.Schemas.SuperContribution.ContributionId" />
+    <ExtractedPropertyName
+      PropertyName="SuperFundManagement.Schemas.FundAllocation.AllocationId"
+      NodePath="/FundAllocationInstruction/AllocationId"
+      FullName="SuperFundManagement.Schemas.FundAllocation.AllocationId" />
+  </ExtractedPropertyNames>
+
+</mapsource>

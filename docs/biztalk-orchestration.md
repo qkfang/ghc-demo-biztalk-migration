@@ -1,8 +1,8 @@
-# BizTalk Orchestration: OrderProcessing
+# BizTalk Orchestration: SuperFundManagement
 
 ## Overview
 
-The `OrderProcessingOrchestration` is a BizTalk Server 2020 orchestration that implements a one-way message flow. It receives an HTTP POST containing an XML `OrderRequest`, transforms it to a `FulfillmentOrder` XML document using a BizTalk map, and forwards the result to a downstream HTTP endpoint.
+The `SuperContributionOrchestration` is a BizTalk Server 2020 orchestration that implements a one-way message flow. It receives an HTTP POST containing an XML `SuperContributionRequest` from an employer's payroll system, transforms it to a `FundAllocationInstruction` XML document using a BizTalk map, and forwards the result to the fund administration platform.
 
 ---
 
@@ -10,40 +10,39 @@ The `OrderProcessingOrchestration` is a BizTalk Server 2020 orchestration that i
 
 ```
                           BizTalk Server 2020
-  ┌─────────────┐         ┌─────────────────────────────────────────────────────────┐
-  │             │  HTTP   │                                                         │
-  │ HTTP Client │ ──POST─▶│  Receive Port         Orchestration      Send Port      │
-  │             │  :7070  │  ┌──────────────┐     ┌────────────┐    ┌────────────┐ │
-  └─────────────┘         │  │OrderHttp     │     │  Order     │    │Fulfillment │ │
-                          │  │Receive       │────▶│  Processing│───▶│HttpSend    │ │
-                          │  │              │     │  Orch.     │    │            │ │
-                          │  └──────────────┘     └────────────┘    └──────┬─────┘ │
-                          └────────────────────────────────────────────────┼────────┘
+  ┌─────────────────┐     ┌─────────────────────────────────────────────────────────┐
+  │                 │HTTP │                                                         │
+  │ Employer        │POST │  Receive Port           Orchestration      Send Port    │
+  │ Payroll System  │────▶│  ┌──────────────┐     ┌──────────────┐   ┌───────────┐ │
+  │                 │:7070│  │Contribution  │     │  Super       │   │Allocation │ │
+  └─────────────────┘     │  │HttpReceive   │────▶│  Contribution│──▶│HttpSend   │ │
+                          │  │              │     │  Orch.       │   │           │ │
+                          │  └──────────────┘     └──────────────┘   └─────┬─────┘ │
+                          └──────────────────────────────────────────────── ┼───────┘
                                                                             │  HTTP POST
                                                                             ▼
-                                                                  ┌─────────────────┐
-                                                                  │ Downstream      │
-                                                                  │ Fulfillment     │
-                                                                  │ Service         │
-                                                                  └─────────────────┘
+                                                                  ┌──────────────────┐
+                                                                  │  Fund Admin      │
+                                                                  │  Platform        │
+                                                                  └──────────────────┘
 ```
 
 ---
 
 ## Receive Port Configuration
 
-**Port Name:** `OrderHttpReceive`
+**Port Name:** `ContributionHttpReceive`
 
-| Property             | Value                              |
-|----------------------|------------------------------------|
-| Adapter              | HTTP                               |
-| Direction            | Receive                            |
-| URL                  | `/OrderProcessing/Receive`         |
-| IIS Port             | 7070                               |
-| Pipeline             | `HttpReceivePipeline`              |
-| Message Schema       | `SourceOrder.OrderRequest`         |
-| Authentication       | Anonymous (extend for production)  |
-| Receive Handler      | `BizTalkServerApplication`        |
+| Property             | Value                                 |
+|----------------------|---------------------------------------|
+| Adapter              | HTTP                                  |
+| Direction            | Receive                               |
+| URL                  | `/SuperFundManagement/Receive`        |
+| IIS Port             | 7070                                  |
+| Pipeline             | `HttpReceivePipeline`                 |
+| Message Schema       | `SuperContribution.SuperContributionRequest` |
+| Authentication       | Anonymous (extend for production)     |
+| Receive Handler      | `BizTalkServerApplication`            |
 
 The HTTP receive adapter is hosted inside IIS via the `BTSHTTPReceive.dll` ISAPI extension. The IIS virtual directory must be configured on port 7070.
 
@@ -51,134 +50,120 @@ The HTTP receive adapter is hosted inside IIS via the `BTSHTTPReceive.dll` ISAPI
 
 ## Schema Descriptions
 
-### Source Schema: `SourceOrderSchema.xsd`
+### Source Schema: `SuperContributionSchema.xsd`
 
-Namespace: `http://OrderProcessing.Schemas.SourceOrder`  
-Root Element: `OrderRequest`
+Namespace: `http://SuperFundManagement.Schemas.SuperContribution`
+Root Element: `SuperContributionRequest`
 
-| Field                        | Type       | Notes                              |
-|------------------------------|------------|------------------------------------|
-| `OrderId`                    | string     | Unique order identifier            |
-| `CustomerId`                 | string     | Customer account number            |
-| `CustomerName`               | string     | Full name                          |
-| `CustomerEmail`              | string     | Contact email                      |
-| `OrderDate`                  | dateTime   | ISO 8601 UTC                       |
-| `Items/Item[+]`              | sequence   | One or more items                  |
-| `Items/Item/ProductCode`     | string     | Product SKU                        |
-| `Items/Item/ProductName`     | string     | Human-readable product name        |
-| `Items/Item/Quantity`        | int        | Units ordered                      |
-| `Items/Item/UnitPrice`       | decimal    | Price per unit                     |
-| `TotalAmount`                | decimal    | Pre-calculated order total         |
-| `Currency`                   | string     | Default: `USD`                     |
-| `ShippingAddress/Street`     | string     | Street address                     |
-| `ShippingAddress/City`       | string     |                                    |
-| `ShippingAddress/State`      | string     | State/province code                |
-| `ShippingAddress/ZipCode`    | string     | Postal code                        |
-| `ShippingAddress/Country`    | string     | Country code (e.g., `US`)          |
+| Field                              | Type     | Notes                                        |
+|------------------------------------|----------|----------------------------------------------|
+| `ContributionId`                   | string   | Unique contribution batch identifier         |
+| `EmployerId`                       | string   | Employer account number                      |
+| `EmployerName`                     | string   | Legal name of the employer                   |
+| `EmployerABN`                      | string   | Australian Business Number (11 digits)       |
+| `PayPeriodEndDate`                 | date     | Pay period end date (ISO 8601)               |
+| `Members/Member[+]`                | sequence | One or more member contributions             |
+| `Members/Member/MemberAccountNumber` | string | Super fund member account number             |
+| `Members/Member/MemberName`        | string   | Full name of the member                      |
+| `Members/Member/ContributionType`  | string   | `SuperannuationGuarantee`, `VoluntaryEmployee`, or `VoluntaryEmployer` |
+| `Members/Member/GrossAmount`       | decimal  | Contribution amount in AUD                   |
+| `TotalContribution`                | decimal  | Sum of all member GrossAmount values         |
+| `Currency`                         | string   | Default: `AUD`                               |
+| `PaymentReference`                 | string   | Payment reference for reconciliation         |
 
-### Target Schema: `TargetFulfillmentSchema.xsd`
+### Target Schema: `FundAllocationSchema.xsd`
 
-Namespace: `http://OrderProcessing.Schemas.FulfillmentOrder`  
-Root Element: `FulfillmentOrder`
+Namespace: `http://SuperFundManagement.Schemas.FundAllocation`
+Root Element: `FundAllocationInstruction`
 
-| Field                             | Type       | Notes                              |
-|-----------------------------------|------------|------------------------------------|
-| `FulfillmentId`                   | string     | System-assigned, prefixed `FF-`    |
-| `SourceOrderRef`                  | string     | Original OrderId for traceability  |
-| `CustomerDetails/Id`              | string     |                                    |
-| `CustomerDetails/Name`            | string     |                                    |
-| `CustomerDetails/Email`           | string     |                                    |
-| `RequestedDate`                   | dateTime   | Copied from `OrderDate`            |
-| `LineItems/LineItem[+]`           | sequence   |                                    |
-| `LineItems/LineItem/SKU`          | string     |                                    |
-| `LineItems/LineItem/Description`  | string     |                                    |
-| `LineItems/LineItem/Qty`          | int        |                                    |
-| `LineItems/LineItem/Price`        | decimal    |                                    |
-| `LineItems/LineItem/LineTotal`    | decimal    | Calculated: Qty × Price            |
-| `OrderTotal`                      | decimal    |                                    |
-| `CurrencyCode`                    | string     |                                    |
-| `ShipTo/AddressLine1`             | string     |                                    |
-| `ShipTo/City`                     | string     |                                    |
-| `ShipTo/StateProvince`            | string     |                                    |
-| `ShipTo/PostalCode`               | string     |                                    |
-| `ShipTo/CountryCode`              | string     |                                    |
-| `Status`                          | string     | Default: `PENDING`                 |
+| Field                                        | Type     | Notes                                      |
+|----------------------------------------------|----------|--------------------------------------------|
+| `AllocationId`                               | string   | System-assigned, prefixed `FA-`            |
+| `SourceContributionRef`                      | string   | Original ContributionId for traceability   |
+| `EmployerDetails/EmployerId`                 | string   |                                            |
+| `EmployerDetails/EmployerName`               | string   |                                            |
+| `EmployerDetails/ABN`                        | string   |                                            |
+| `AllocationDate`                             | date     | Copied from `PayPeriodEndDate`             |
+| `MemberAllocations/Allocation[+]`            | sequence |                                            |
+| `MemberAllocations/Allocation/AccountNumber` | string   |                                            |
+| `MemberAllocations/Allocation/MemberName`    | string   |                                            |
+| `MemberAllocations/Allocation/ContributionType` | string |                                           |
+| `MemberAllocations/Allocation/ContributionAmount` | decimal |                                        |
+| `MemberAllocations/Allocation/AllocationStatus` | string | Default: `PENDING`                       |
+| `TotalAllocated`                             | decimal  |                                            |
+| `CurrencyCode`                               | string   |                                            |
+| `Status`                                     | string   | Default: `PENDING`                         |
 
 ---
 
-## Map: OrderToFulfillmentMap
+## Map: ContributionToAllocationMap
 
-**File:** `Maps/OrderToFulfillmentMap.btm`
+**File:** `Maps/ContributionToAllocationMap.btm`
 
 ### Transformation Rules
 
-| Source Field                  | Target Field                     | Transformation Logic                          |
-|-------------------------------|----------------------------------|-----------------------------------------------|
-| `OrderId`                     | `FulfillmentId`                  | **String Concatenate Functoid**: `"FF-"` + `OrderId` |
-| `OrderId`                     | `SourceOrderRef`                 | Direct link                                   |
-| `CustomerId`                  | `CustomerDetails/Id`             | Direct link                                   |
-| `CustomerName`                | `CustomerDetails/Name`           | Direct link                                   |
-| `CustomerEmail`               | `CustomerDetails/Email`          | Direct link                                   |
-| `OrderDate`                   | `RequestedDate`                  | Direct link                                   |
-| `Items/Item` *(loop)*         | `LineItems/LineItem`             | **Looping Functoid**                          |
-| `Item/ProductCode`            | `LineItem/SKU`                   | Direct link (within loop)                     |
-| `Item/ProductName`            | `LineItem/Description`           | Direct link (within loop)                     |
-| `Item/Quantity`               | `LineItem/Qty`                   | Direct link (within loop)                     |
-| `Item/UnitPrice`              | `LineItem/Price`                 | Direct link (within loop)                     |
-| `Item/Quantity × UnitPrice`   | `LineItem/LineTotal`             | **Multiplication Functoid** (within loop)     |
-| `TotalAmount`                 | `OrderTotal`                     | Direct link                                   |
-| `Currency`                    | `CurrencyCode`                   | Direct link                                   |
-| `ShippingAddress/Street`      | `ShipTo/AddressLine1`            | Direct link                                   |
-| `ShippingAddress/City`        | `ShipTo/City`                    | Direct link                                   |
-| `ShippingAddress/State`       | `ShipTo/StateProvince`           | Direct link                                   |
-| `ShippingAddress/ZipCode`     | `ShipTo/PostalCode`              | Direct link                                   |
-| `ShippingAddress/Country`     | `ShipTo/CountryCode`             | Direct link                                   |
-| *(constant)*                  | `Status`                         | **Constant Functoid**: value = `"PENDING"`    |
+| Source Field                        | Target Field                              | Transformation Logic                               |
+|-------------------------------------|-------------------------------------------|----------------------------------------------------|
+| `ContributionId`                    | `AllocationId`                            | **String Concatenate Functoid**: `"FA-"` + `ContributionId` |
+| `ContributionId`                    | `SourceContributionRef`                   | Direct link                                        |
+| `EmployerId`                        | `EmployerDetails/EmployerId`              | Direct link                                        |
+| `EmployerName`                      | `EmployerDetails/EmployerName`            | Direct link                                        |
+| `EmployerABN`                       | `EmployerDetails/ABN`                     | Direct link                                        |
+| `PayPeriodEndDate`                  | `AllocationDate`                          | Direct link                                        |
+| `Members/Member` *(loop)*           | `MemberAllocations/Allocation`            | **Looping Functoid**                               |
+| `Member/MemberAccountNumber`        | `Allocation/AccountNumber`                | Direct link (within loop)                          |
+| `Member/MemberName`                 | `Allocation/MemberName`                   | Direct link (within loop)                          |
+| `Member/ContributionType`           | `Allocation/ContributionType`             | Direct link (within loop)                          |
+| `Member/GrossAmount`                | `Allocation/ContributionAmount`           | Direct link (within loop)                          |
+| *(constant)*                        | `Allocation/AllocationStatus`             | **Constant Functoid**: value = `"PENDING"`         |
+| `TotalContribution`                 | `TotalAllocated`                          | Direct link                                        |
+| `Currency`                          | `CurrencyCode`                            | Direct link                                        |
+| *(constant)*                        | `Status`                                  | **Constant Functoid**: value = `"PENDING"`         |
 
 ---
 
 ## Orchestration Flow
 
-The orchestration is defined in `Orchestrations/OrderProcessingOrchestration.odx`.
+The orchestration is defined in `Orchestrations/SuperContributionOrchestration.odx`.
 
 ### Step-by-Step
 
-1. **Receive** – The orchestration activates when a message arrives on `ReceiveOrderPort`.
-   - Message type: `OrderProcessing.Schemas.SourceOrder.OrderRequest`
-   - Correlation set initialized on `OrderId` property
+1. **Receive** – The orchestration activates when a message arrives on `ReceiveContributionPort`.
+   - Message type: `SuperFundManagement.Schemas.SuperContribution.SuperContributionRequest`
+   - Correlation set initialized on `ContributionId` property
 
-2. **Construct** – A `ConstructMessage` shape creates `FulfillmentOrderMsg`.
-   - Contains a `Transform` shape that applies `OrderToFulfillmentMap`
-   - Input: `OrderRequestMsg`
-   - Output: `FulfillmentOrderMsg` (type `FulfillmentOrder`)
+2. **Construct** – A `ConstructMessage` shape creates `FundAllocationInstructionMsg`.
+   - Contains a `Transform` shape that applies `ContributionToAllocationMap`
+   - Input: `SuperContributionRequestMsg`
+   - Output: `FundAllocationInstructionMsg` (type `FundAllocationInstruction`)
 
-3. **Send** – The `SendFulfillmentOrder` shape publishes `FulfillmentOrderMsg`.
-   - Bound to `SendFulfillmentPort`
+3. **Send** – The `SendFundAllocationInstruction` shape publishes `FundAllocationInstructionMsg`.
+   - Bound to `SendAllocationPort`
    - Follows the existing correlation set
 
 ### Message Declarations
 
-| Message Name          | Type                                          | Role     |
-|-----------------------|-----------------------------------------------|----------|
-| `OrderRequestMsg`     | `SourceOrder.OrderRequest`                    | Inbound  |
-| `FulfillmentOrderMsg` | `FulfillmentOrder.FulfillmentOrder`           | Outbound |
+| Message Name                    | Type                                               | Role     |
+|---------------------------------|----------------------------------------------------|----------|
+| `SuperContributionRequestMsg`   | `SuperContribution.SuperContributionRequest`       | Inbound  |
+| `FundAllocationInstructionMsg`  | `FundAllocation.FundAllocationInstruction`         | Outbound |
 
 ---
 
 ## Send Port Configuration
 
-**Port Name:** `FulfillmentHttpSend`
+**Port Name:** `AllocationHttpSend`
 
-| Property        | Value                                          |
-|-----------------|------------------------------------------------|
-| Adapter         | HTTP                                           |
-| URL             | `http://downstream-service/api/fulfillment`    |
-| Content-Type    | `application/xml`                              |
-| Pipeline        | `HttpSendPipeline`                             |
-| Map             | `OrderToFulfillmentMap`                        |
-| Retry Count     | 3                                              |
-| Retry Interval  | 5 seconds                                      |
-| Filter          | `BTS.ReceivePortName == OrderHttpReceive`      |
+| Property        | Value                                              |
+|-----------------|----------------------------------------------------|
+| Adapter         | HTTP                                               |
+| URL             | `http://fund-admin-platform/api/allocations`       |
+| Content-Type    | `application/xml`                                  |
+| Pipeline        | `HttpSendPipeline`                                 |
+| Map             | `ContributionToAllocationMap`                      |
+| Retry Count     | 3                                                  |
+| Retry Interval  | 5 seconds                                          |
+| Filter          | `BTS.ReceivePortName == ContributionHttpReceive`   |
 
 ---
 
@@ -188,8 +173,8 @@ The orchestration is defined in `Orchestrations/OrderProcessingOrchestration.odx
 2. **Deploy** using BTSTask or via Visual Studio Deploy context menu.
 3. **Import bindings** from `BindingFile.xml`:
    ```powershell
-   BTSTask ImportBindings /ApplicationName:OrderProcessing /Source:BindingFile.xml
+   BTSTask ImportBindings /ApplicationName:SuperFundManagement /Source:BindingFile.xml
    ```
 4. **Start** the application from BizTalk Admin Console.
 5. **Verify** the receive location is enabled and the IIS virtual directory is configured on port 7070.
-6. **Test** by sending a sample XML POST to `http://localhost:7070/OrderProcessing/Receive`.
+6. **Test** by sending a sample XML POST to `http://localhost:7070/SuperFundManagement/Receive`.

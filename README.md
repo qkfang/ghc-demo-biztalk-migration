@@ -6,11 +6,11 @@ A complete, live demo repository for the **"GitHub Copilot: BizTalk to Azure Fun
 
 ## Demo Scenario
 
-An **Order Processing** integration that:
+A **Superannuation Fund Management** integration for a super company that:
 
-1. **Receives** an HTTP POST with an XML `OrderRequest` payload
-2. **Transforms** the payload from the legacy `OrderRequest` format to the modern `FulfillmentOrder` format (equivalent to a BizTalk map with String Concatenate and Multiplication functoids)
-3. **Forwards** the transformed payload as XML to a downstream HTTP fulfillment endpoint
+1. **Receives** an HTTP POST with an XML `SuperContributionRequest` payload from an employer's payroll system
+2. **Transforms** the payload from the legacy `SuperContributionRequest` format to the modern `FundAllocationInstruction` format (equivalent to a BizTalk map with String Concatenate and constant functoids)
+3. **Forwards** the transformed payload as XML to the downstream fund administration platform
 
 ---
 
@@ -18,46 +18,46 @@ An **Order Processing** integration that:
 
 ```
 .
-├── biztalk/                        # BizTalk Server 2020 source (the "before")
-│   ├── OrderProcessing.sln
-│   └── OrderProcessing/
-│       ├── OrderProcessing.btproj
-│       ├── BindingFile.xml         # Port & orchestration bindings
+├── biztalk/                                # BizTalk Server 2020 source (the "before")
+│   ├── SuperFundManagement.sln
+│   └── SuperFundManagement/
+│       ├── SuperFundManagement.btproj
+│       ├── BindingFile.xml                 # Port & orchestration bindings
 │       ├── Schemas/
-│       │   ├── SourceOrderSchema.xsd
-│       │   └── TargetFulfillmentSchema.xsd
+│       │   ├── SuperContributionSchema.xsd
+│       │   └── FundAllocationSchema.xsd
 │       ├── Maps/
-│       │   └── OrderToFulfillmentMap.btm
+│       │   └── ContributionToAllocationMap.btm
 │       ├── Orchestrations/
-│       │   └── OrderProcessingOrchestration.odx
+│       │   └── SuperContributionOrchestration.odx
 │       └── Pipelines/
 │           ├── HttpReceivePipeline.btp
 │           └── HttpSendPipeline.btp
 │
-├── func/                           # Azure Functions app (the "after")
-│   ├── OrderProcessingFunc.sln
-│   ├── OrderProcessingFunc/        # .NET 8 isolated worker function app
+├── func/                                   # Azure Functions app (the "after")
+│   ├── SuperFundManagementFunc.sln
+│   ├── SuperFundManagementFunc/            # .NET 8 isolated worker function app
 │   │   ├── Program.cs
 │   │   ├── host.json
 │   │   ├── local.settings.json
 │   │   ├── Models/
-│   │   │   ├── SourceOrder.cs
-│   │   │   └── FulfillmentOrder.cs
+│   │   │   ├── SuperContribution.cs
+│   │   │   └── FundAllocation.cs
 │   │   ├── Services/
-│   │   │   ├── IOrderTransformService.cs
-│   │   │   ├── OrderTransformService.cs
-│   │   │   ├── IFulfillmentSenderService.cs
-│   │   │   └── FulfillmentSenderService.cs
+│   │   │   ├── IContributionTransformService.cs
+│   │   │   ├── ContributionTransformService.cs
+│   │   │   ├── IFundAllocationSenderService.cs
+│   │   │   └── FundAllocationSenderService.cs
 │   │   └── Functions/
-│   │       └── OrderProcessingFunction.cs
-│   └── OrderProcessingFunc.Tests/  # xUnit test project
+│   │       └── SuperContributionFunction.cs
+│   └── SuperFundManagementFunc.Tests/      # xUnit test project
 │       ├── Services/
-│       │   ├── OrderTransformServiceTests.cs
-│       │   └── FulfillmentSenderServiceTests.cs
+│       │   ├── ContributionTransformServiceTests.cs
+│       │   └── FundAllocationSenderServiceTests.cs
 │       └── Functions/
-│           └── OrderProcessingFunctionTests.cs
+│           └── SuperContributionFunctionTests.cs
 │
-├── bicep/                          # Azure IaC (Bicep)
+├── bicep/                                  # Azure IaC (Bicep)
 │   ├── main.bicep
 │   ├── main.bicepparam
 │   └── modules/
@@ -66,7 +66,7 @@ An **Order Processing** integration that:
 │       ├── appInsights.bicep
 │       └── functionApp.bicep
 │
-└── docs/                           # Documentation
+└── docs/                                   # Documentation
     ├── biztalk-orchestration.md
     ├── migration-guide.md
     ├── copilot-demo-script.md
@@ -83,13 +83,13 @@ An **Order Processing** integration that:
 
 ```bash
 # Open in Visual Studio
-start biztalk/OrderProcessing.sln
+start biztalk/SuperFundManagement.sln
 
 # Build
-msbuild biztalk/OrderProcessing.sln /p:Configuration=Release
+msbuild biztalk/SuperFundManagement.sln /p:Configuration=Release
 
 # Deploy bindings after MSI install
-BTSTask ImportBindings /ApplicationName:OrderProcessing /Source:biztalk/OrderProcessing/BindingFile.xml
+BTSTask ImportBindings /ApplicationName:SuperFundManagement /Source:biztalk/SuperFundManagement/BindingFile.xml
 ```
 
 See [biztalk/README.md](biztalk/README.md) for full deployment instructions.
@@ -100,21 +100,21 @@ See [biztalk/README.md](biztalk/README.md) for full deployment instructions.
 
 ```bash
 # Install dependencies
-cd func/OrderProcessingFunc
+cd func/SuperFundManagementFunc
 dotnet restore
 
 # Run locally (start Azurite first for local storage)
 func start
 
 # Test with curl
-curl -X POST http://localhost:7071/api/orders \
+curl -X POST http://localhost:7071/api/contributions \
   -H "Content-Type: application/xml" \
-  -d '<?xml version="1.0"?><OrderRequest xmlns="http://OrderProcessing.Schemas.SourceOrder"><OrderId>ORD-001</OrderId><CustomerId>CUST-42</CustomerId><CustomerName>Jane Smith</CustomerName><CustomerEmail>jane@example.com</CustomerEmail><OrderDate>2024-06-15T10:30:00Z</OrderDate><Items><Item><ProductCode>SKU-A</ProductCode><ProductName>Widget</ProductName><Quantity>2</Quantity><UnitPrice>29.99</UnitPrice></Item></Items><TotalAmount>59.98</TotalAmount><Currency>USD</Currency><ShippingAddress><Street>123 Main St</Street><City>Springfield</City><State>IL</State><ZipCode>62701</ZipCode><Country>US</Country></ShippingAddress></OrderRequest>'
+  -d '<?xml version="1.0"?><SuperContributionRequest xmlns="http://SuperFundManagement.Schemas.SuperContribution"><ContributionId>CONT-2024-001</ContributionId><EmployerId>EMP-001</EmployerId><EmployerName>Acme Corporation Pty Ltd</EmployerName><EmployerABN>51824753556</EmployerABN><PayPeriodEndDate>2024-06-30</PayPeriodEndDate><Members><Member><MemberAccountNumber>SF-100001</MemberAccountNumber><MemberName>Jane Smith</MemberName><ContributionType>SuperannuationGuarantee</ContributionType><GrossAmount>875.00</GrossAmount></Member></Members><TotalContribution>875.00</TotalContribution><Currency>AUD</Currency><PaymentReference>PAY-REF-20240630</PaymentReference></SuperContributionRequest>'
 ```
 
 Expected response:
 ```json
-{ "fulfillmentId": "FF-ORD-001", "sourceOrderRef": "ORD-001", "status": "PENDING" }
+{ "allocationId": "FA-CONT-2024-001", "sourceContributionRef": "CONT-2024-001", "status": "PENDING" }
 ```
 
 See [func/README.md](func/README.md) for full details.
@@ -123,16 +123,16 @@ See [func/README.md](func/README.md) for full details.
 
 ```bash
 cd func
-dotnet test OrderProcessingFunc.sln --verbosity normal
+dotnet test SuperFundManagementFunc.sln --verbosity normal
 ```
 
 ### Deploy Infrastructure
 
 ```bash
-az group create --name rg-order-processing-dev --location australiaeast
+az group create --name rg-super-fund-mgmt-dev --location australiaeast
 
 az deployment group create \
-  --resource-group rg-order-processing-dev \
+  --resource-group rg-super-fund-mgmt-dev \
   --template-file bicep/main.bicep \
   --parameters bicep/main.bicepparam
 ```
