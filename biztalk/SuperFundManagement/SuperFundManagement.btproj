@@ -1,4 +1,4 @@
-<Project DefaultTargets="Deploy" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project DefaultTargets="Deploy" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <ProjectGuid>{B2C3D4E5-F6A7-8901-BCDE-F12345678901}</ProjectGuid>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -19,7 +19,8 @@
     <RegisterWithIIS>false</RegisterWithIIS>
     <EnableUnitTesting>false</EnableUnitTesting>
     <SuppressIISResetOnDeploy>false</SuppressIISResetOnDeploy>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -65,11 +66,11 @@
   <ItemGroup>
     <BtsContent Include="Schemas\SuperContributionSchema.xsd">
       <ItemType>Schema</ItemType>
-      <SubType>Schema</SubType>
+      <SubType>Designer</SubType>
     </BtsContent>
     <BtsContent Include="Schemas\FundAllocationSchema.xsd">
       <ItemType>Schema</ItemType>
-      <SubType>Schema</SubType>
+      <SubType>Designer</SubType>
     </BtsContent>
     <BtsContent Include="Maps\ContributionToAllocationMap.btm">
       <ItemType>Map</ItemType>
