@@ -189,7 +189,7 @@ Downstream Fulfillment Service
 ### Step 10: Deploy Function Code
 
 ```bash
-cd func/SuperFundManagementFunc
+cd az/funcapp/SuperFundManagementFunc
 dotnet publish -c Release -o ./publish
 cd publish && zip -r ../deploy.zip .
 az functionapp deployment source config-zip \

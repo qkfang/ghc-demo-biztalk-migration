@@ -40,7 +40,7 @@ Apply these conventions:
 
 ### Step 3 — File Placement & Namespace
 
-- Place generated files in `func/<AppName>/Models/`
+- Place generated files in `az/funcapp/<AppName>/Models/`
 - Use namespace `<AppName>.Functions.Models`
 - One `.cs` file per XSD root element (e.g. `SuperContribution.cs`, `FundAllocation.cs`)
 - Add `using System.Collections.Generic;` and `using System.Xml.Serialization;` at the top

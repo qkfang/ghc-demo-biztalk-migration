@@ -14,9 +14,9 @@ Analyze BizTalk artifacts in the `biztalk/` folder and produce an equivalent Azu
 
 | Output | Folder | Contents |
 |--------|--------|----------|
-| Function app | `func/` | C# .NET 8 isolated worker Azure Functions |
-| Tests | `func/` | xUnit test projects per service/function |
-| Infrastructure | `bicep/` | Bicep modules + main template + params |
+| Function app | `az/funcapp/` | C# .NET 8 isolated worker Azure Functions |
+| Tests | `az/funcapp/` | xUnit test projects per service/function |
+| Infrastructure | `az/bicep/` | Bicep modules + main template + params |
 
 ## BizTalk Artifact Mapping
 
@@ -36,7 +36,7 @@ Translate BizTalk concepts to Azure equivalents as follows:
 ## Project Structure to Generate
 
 ```
-func/
+az/funcapp/
   SuperFundManagementFunc.sln
   SuperFundManagementFunc/
     SuperFundManagementFunc.csproj       (.NET 8, AzureFunctionsWorker isolated)

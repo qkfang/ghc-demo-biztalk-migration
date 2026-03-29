@@ -8,9 +8,9 @@
 - [ ] VS Code open with this repository
 - [ ] GitHub Copilot extension installed and signed in
 - [ ] Copilot Chat panel open (Ctrl+Shift+I)
-- [ ] `func/SuperFundManagementFunc` open in Explorer sidebar
+- [ ] `az/funcapp/SuperFundManagementFunc` open in Explorer sidebar
 - [ ] `biztalk/SuperFundManagement/Maps/ContributionToAllocationMap.btm` open in an editor tab
-- [ ] Terminal open in `func/` folder
+- [ ] Terminal open in `az/funcapp/` folder
 - [ ] Font size bumped up for visibility
 
 ---
@@ -136,7 +136,7 @@ Convert this BizTalk multiplication functoid to C# equivalent code
 
 ### What to Show First
 
-Open `func/SuperFundManagementFunc.Tests/Services/ContributionTransformServiceTests.cs` and say:
+Open `az/funcapp/SuperFundManagementFunc.Tests/Services/ContributionTransformServiceTests.cs` and say:
 
 > "We have the service written. Now let's ask Copilot to generate comprehensive unit tests — the kind that would have required a full test strategy document with BizTalk."
 
@@ -190,7 +190,7 @@ All tests pass immediately.
 
 ### What to Show First
 
-Open `func/SuperFundManagementFunc/Services/ContributionTransformService.cs` and highlight the class without XML docs.
+Open `az/funcapp/SuperFundManagementaz/funcapp/Services/ContributionTransformService.cs` and highlight the class without XML docs.
 
 ### Copilot Chat Prompt
 

@@ -57,7 +57,7 @@ See [bicep/README.md](bicep/README.md) for full deployment steps.
 
 ```bash
 # Install dependencies
-cd func/SuperFundManagementFunc
+cd az/funcapp/SuperFundManagementFunc
 dotnet restore
 
 # Run locally (start Azurite first for local storage)
@@ -74,7 +74,7 @@ Expected response:
 { "allocationId": "FA-CONT-2024-001", "sourceContributionRef": "CONT-2024-001", "status": "PENDING" }
 ```
 
-See [func/README.md](func/README.md) for full details.
+See [az/funcapp/README.md](az/funcapp/README.md) for full details.
 
 ### Run Tests
 
@@ -139,9 +139,9 @@ keep the init migration process simple and as it as
 │           ├── HttpReceivePipeline.btp
 │           └── HttpSendPipeline.btp
 │
-├── func/                                   # Azure Functions app (the "after")
+├── az/funcapp/                                   # Azure Functions app (the "after")
 │   ├── SuperFundManagementFunc.sln
-│   ├── SuperFundManagementFunc/            # .NET 8 isolated worker function app
+│   ├── SuperFundManagementaz/funcapp/            # .NET 8 isolated worker function app
 │   │   ├── Program.cs
 │   │   ├── host.json
 │   │   ├── local.settings.json
