@@ -1,7 +1,8 @@
 # Copilot Migration Demo Guide
 
+## Overview
 
-## Demo Guide
+This guide walks through a live demo of migrating a legacy BizTalk Server integration to Azure Functions using GitHub Copilot.
 
 ---
 
@@ -13,14 +14,14 @@
 
 ### Step 1
 
-Quickly show existing legacy biztalk project and explain the integraiton
+Briefly walk through the existing legacy BizTalk project and explain the integration scenario.
 
 
 ---
 
 ### Step 2
 
-Understand current BizTalk project using `github copilot chat`, use an Opus 4.6 model.
+Use **GitHub Copilot Chat** (Claude Sonnet 4.6 model) to analyse the existing BizTalk project and generate a visual summary.
 
 ```
 #agent create 'biztalk.md' mermaid diagram markdown file to describe current biztalk project.
@@ -34,7 +35,7 @@ biztalk source code is under `app-biztalk` folder. Keep it simple, include these
 
 ### Step 3
 
-Create a customised BizTalk migration agent using `Claude` agent.
+Create a customised BizTalk migration agent using the **Claude** agent mode.
 
 ```
 /create-agent  create or update `biztalk-migration.agent.md` to include requirements and guildlines. Keep it simple, 
@@ -44,7 +45,7 @@ Create a customised BizTalk migration agent using `Claude` agent.
 
 ### Step 4
 
-run `copilot` in CLI to open github copilot cli, and create a migration ticket
+Open **GitHub Copilot CLI** and create a GitHub issue to track the migration work.
 
 ```
 #agent create an issue ticket in github copilot for biztalk migration
@@ -63,7 +64,7 @@ keep the init migration process simple and as it as'
 
 ### Step 5
 
-Use GitHub coding agent to implement the code. go to github.com and assign the ticket to github copilot.
+Go to **github.com**, open the issue, and assign it to GitHub Copilot to begin autonomous implementation.
 
 ```
 #agent create an issue ticket in github copilot for biztalk migration
@@ -82,15 +83,13 @@ keep the init migration process simple and as it as'
 
 ### Step 6
 
-Watch agent integration and start up. then switch to an existing ticket to show the outcome
+Observe the Copilot agent working through the migration. Once complete, review the finished pull request to show the outcome.
 
 ---
 
 
 ### Step 7
 
-Switch to the agent working branch and checkout the code to run. run func app test and endpoint
-
-do a test to see func app returns value
+Check out the agent's working branch, run the Function App tests, and call the endpoint to verify the migrated integration returns the expected response.
 
 ---
