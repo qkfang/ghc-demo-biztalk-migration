@@ -4,27 +4,36 @@
 
 The `SuperContributionOrchestration` is a BizTalk Server 2020 orchestration that implements a one-way message flow. It receives an HTTP POST containing an XML `SuperContributionRequest` from an employer's payroll system, transforms it to a `FundAllocationInstruction` XML document using a BizTalk map, and forwards the result to the fund administration platform.
 
+![BizTalk Orchestration in Visual Studio](res/biztalk-flow.png)
+
 ---
 
 ## Architecture
 
-```
-                          BizTalk Server 2020
-  ┌─────────────────┐     ┌─────────────────────────────────────────────────────────┐
-  │                 │HTTP │                                                         │
-  │ Employer        │POST │  Receive Port           Orchestration      Send Port    │
-  │ Payroll System  │────▶│  ┌──────────────┐     ┌──────────────┐   ┌───────────┐ │
-  │                 │:7070│  │Contribution  │     │  Super       │   │Allocation │ │
-  └─────────────────┘     │  │HttpReceive   │────▶│  Contribution│──▶│HttpSend   │ │
-                          │  │              │     │  Orch.       │   │           │ │
-                          │  └──────────────┘     └──────────────┘   └─────┬─────┘ │
-                          └──────────────────────────────────────────────── ┼───────┘
-                                                                            │  HTTP POST
-                                                                            ▼
-                                                                  ┌──────────────────┐
-                                                                  │  Fund Admin      │
-                                                                  │  Platform        │
-                                                                  └──────────────────┘
+```mermaid
+flowchart LR
+    EPS["Employer\nPayroll System"]
+
+    subgraph BizTalk["BizTalk Server 2020"]
+        RP["ContributionHttpReceive\n─────────────────\nAdapter: HTTP :7070\nPipeline: HttpReceivePipeline\n  • XML Disassembler\n  • XML Validator\nSchema: SuperContributionRequest"]
+
+        subgraph ORCH["SuperContributionOrchestration"]
+            direction TB
+            R["① Receive\nReceiveContributionPort\nMsg: SuperContributionRequestMsg\nInit CorrelationSet: ContributionId"]
+            C["② Construct\nContributionToAllocationMap\n  • FA- prefix functoid\n  • Looping functoid\n  • PENDING constant\n  • FormatABN scripting"]
+            S["③ Send\nSendAllocationPort\nMsg: FundAllocationInstructionMsg\nFollow CorrelationSet"]
+            R --> C --> S
+        end
+
+        SP["AllocationHttpSend\n─────────────────\nAdapter: HTTP POST\nPipeline: HttpSendPipeline\n  • XML Assembler (UTF-8)\nRetry: 3 × 5s"]
+    end
+
+    FAP["Fund Admin\nPlatform\n/api/allocations"]
+
+    EPS -->|"HTTP POST :7070\n/SuperFundManagement/Receive"| RP
+    RP --> ORCH
+    ORCH --> SP
+    SP -->|"HTTP POST\napplication/xml"| FAP
 ```
 
 ---
