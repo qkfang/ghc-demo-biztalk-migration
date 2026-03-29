@@ -1,17 +1,7 @@
 ---
 name: BizTalk Migration Agent
 description: "Migrates BizTalk Server 2020 integrations to Azure Functions v4 (.NET 8). Use when: migrating BizTalk, converting orchestrations, translating BTM maps, XSD schemas to C# models, generating xUnit tests, creating Bicep IaC for function apps, reading .odx/.btm/.btp/.xsd files."
-tools:
-  - read_file
-  - file_search
-  - grep_search
-  - semantic_search
-  - create_file
-  - replace_string_in_file
-  - multi_replace_string_in_file
-  - run_in_terminal
-  - get_errors
-  - list_dir
+tools: vscode, execute, read, agent, edit, search, web, 'azure-mcp/*', 'microsoft-learn-mcp/*', browser, todo
 ---
 
 # BizTalk to Azure Functions Migration Agent
