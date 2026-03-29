@@ -23,6 +23,18 @@
                Location="Schemas\FundAllocationSchema.xsd" />
   </TrgTree>
 
+  <!--
+    ContributionMapHelper.cs (Scripting Functoid – External Assembly)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    The two Scripting Functoids below (IDs 3 and 4) call static-style methods
+    from the ContributionMapHelper class compiled into the
+    SuperFundManagement.Maps assembly.
+
+    When the Scripting Functoid is configured as "Inline C#", BizTalk
+    embeds equivalent code inside an <msxsl:script> block in the generated
+    XSLT (see ContributionToAllocationMap.xsl).
+  -->
+
   <!-- Functoid: String Concatenate for AllocationId = "FA-" + ContributionId -->
   <Functoid ID="1" functoid-id="104"
             FunctoidType="StringConcatenate"
@@ -44,6 +56,57 @@
     <Input>
       <Param Name="Constant" Value="PENDING" Type="Constant" />
     </Input>
+  </Functoid>
+
+  <!--
+    Scripting Functoid 3 — FormatABN
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Calls ContributionMapHelper.FormatABN(abn) to convert the raw EmployerABN
+    digits into the standard "XX XXX XXX XXX" display format.
+    Replaces the previous direct link L05 (EmployerABN → ABN).
+
+    Inline C# mode: the method body is also embedded verbatim in the
+    <msxsl:script> block in ContributionToAllocationMap.xsl.
+  -->
+  <Functoid ID="3" functoid-id="10000"
+            FunctoidType="Scripting"
+            X="30" Y="280" W="32" H="16"
+            ConnectionType="0 1"
+            Label="FormatABN">
+    <Input>
+      <Param Name="EmployerABN" Value="/SuperContributionRequest/EmployerABN" Type="Link" />
+    </Input>
+    <ScriptBuffer ScriptType="ExternalAssembly">
+      <AssemblyName>SuperFundManagement.Maps</AssemblyName>
+      <ClassName>SuperFundManagement.Maps.ContributionMapHelper</ClassName>
+      <MethodName>FormatABN</MethodName>
+    </ScriptBuffer>
+  </Functoid>
+
+  <!--
+    Scripting Functoid 4 — CalculateNetContribution
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Calls ContributionMapHelper.CalculateNetContribution(grossAmountStr) to
+    compute the net contribution after deducting the 15% ATO contributions tax.
+      Net = GrossAmount × 0.85
+    Replaces the previous direct link L11 (GrossAmount → ContributionAmount).
+
+    Inline C# mode: the method body is also embedded verbatim in the
+    <msxsl:script> block in ContributionToAllocationMap.xsl.
+  -->
+  <Functoid ID="4" functoid-id="10001"
+            FunctoidType="Scripting"
+            X="30" Y="340" W="32" H="16"
+            ConnectionType="0 1"
+            Label="CalculateNetContribution">
+    <Input>
+      <Param Name="GrossAmount" Value="/SuperContributionRequest/Members/Member/GrossAmount" Type="Link" />
+    </Input>
+    <ScriptBuffer ScriptType="ExternalAssembly">
+      <AssemblyName>SuperFundManagement.Maps</AssemblyName>
+      <ClassName>SuperFundManagement.Maps.ContributionMapHelper</ClassName>
+      <MethodName>CalculateNetContribution</MethodName>
+    </ScriptBuffer>
   </Functoid>
 
   <!-- Direct Links -->
@@ -72,9 +135,9 @@
           TargetNode="/FundAllocationInstruction/EmployerDetails/EmployerName"
           Label="EmployerName" />
 
-    <!-- EmployerDetails/ABN = EmployerABN -->
+    <!-- EmployerDetails/ABN = FormatABN(EmployerABN) via Scripting Functoid 3 -->
     <Link ID="L05"
-          SourceNode="/SuperContributionRequest/EmployerABN"
+          SourceNode="Functoid:3"
           TargetNode="/FundAllocationInstruction/EmployerDetails/ABN"
           Label="ABN" />
 
@@ -109,9 +172,9 @@
           TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/ContributionType"
           Label="ContributionType" />
 
-    <!-- ContributionAmount = GrossAmount -->
+    <!-- ContributionAmount = CalculateNetContribution(GrossAmount) via Scripting Functoid 4 -->
     <Link ID="L11"
-          SourceNode="/SuperContributionRequest/Members/Member/GrossAmount"
+          SourceNode="Functoid:4"
           TargetNode="/FundAllocationInstruction/MemberAllocations/Allocation/ContributionAmount"
           Label="ContributionAmount" />
 

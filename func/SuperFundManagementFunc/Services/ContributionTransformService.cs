@@ -1,3 +1,4 @@
+using SuperFundManagementFunc.Helpers;
 using SuperFundManagementFunc.Models;
 
 namespace SuperFundManagementFunc.Services;
@@ -5,7 +6,14 @@ namespace SuperFundManagementFunc.Services;
 /// <summary>
 /// Implements the superannuation contribution-to-allocation transformation logic.
 /// This is the Azure Functions equivalent of the BizTalk ContributionToAllocationMap.btm,
-/// including the String Concatenate functoid (FA- prefix) and the constant PENDING functoid.
+/// including all four functoids:
+///   Functoid 1 – String Concatenate  : "FA-" prefix on AllocationId
+///   Functoid 2 – String Constant     : PENDING status per member
+///   Functoid 3 – Scripting (FormatABN)               : formats EmployerABN
+///   Functoid 4 – Scripting (CalculateNetContribution): applies 15% contributions tax
+/// The scripting logic lives in <see cref="ContributionMapHelper"/>, mirroring the
+/// BizTalk <c>ContributionMapHelper.cs</c> helper class that is called by Scripting
+/// Functoids 3 and 4 in the BizTalk map.
 /// </summary>
 public class ContributionTransformService : IContributionTransformService
 {
@@ -33,7 +41,8 @@ public class ContributionTransformService : IContributionTransformService
             {
                 EmployerId = contribution.EmployerId,
                 EmployerName = contribution.EmployerName,
-                ABN = contribution.EmployerABN
+                // BizTalk equivalent: Scripting Functoid 3 (FormatABN)
+                ABN = ContributionMapHelper.FormatABN(contribution.EmployerABN)
             },
 
             // BizTalk equivalent: Looping functoid over Members/Member → MemberAllocations/Allocation
@@ -44,7 +53,8 @@ public class ContributionTransformService : IContributionTransformService
                     AccountNumber = member.MemberAccountNumber,
                     MemberName = member.MemberName,
                     ContributionType = member.ContributionType,
-                    ContributionAmount = member.GrossAmount,
+                    // BizTalk equivalent: Scripting Functoid 4 (CalculateNetContribution)
+                    ContributionAmount = ContributionMapHelper.CalculateNetContribution(member.GrossAmount),
                     // BizTalk equivalent: String Constant functoid → "PENDING"
                     AllocationStatus = DefaultStatus
                 }).ToList()
