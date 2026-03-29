@@ -67,11 +67,11 @@ keep the init migration process simple and as it as'
 Go to **github.com**, open the issue, and assign it to GitHub Copilot to begin autonomous implementation.
 
 ```
-#agent create an issue ticket in github copilot for biztalk migration
+#agent create an issue ticket in github copilot for biztalk migration use GitHub MCP
 
 title: 'migrate Biztalk integration to Azure Functions'
 body: 'migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
-- create the integraiton logics as a c# function app inside `az\funcapp`
+- create the integraiton logics as a c# function app inside `az\funcapp` with swagger
 - create tests for the integration inside `az\funcapp`
 - create IaC deployment for azure inside `az\bicep`
 
