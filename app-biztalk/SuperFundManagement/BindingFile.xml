@@ -65,7 +65,8 @@
               BindingOption="0">
       <Description>HTTP send port for posting fund allocation instructions to the fund administration platform</Description>
       <PrimaryTransport>
-        <Address>http://fund-admin-platform/api/allocations</Address>
+        <!-- <Address>http://fund-admin-platform/api/allocations</Address> -->
+        <Address>http://localhost:5050/api/allocations</Address>
         <TransportType>HTTP</TransportType>
         <TransportTypeData>&lt;CustomProps&gt;&lt;UseHandlerProxySettings vt=&quot;11&quot;&gt;-1&lt;/UseHandlerProxySettings&gt;&lt;UseSSO vt=&quot;11&quot;&gt;0&lt;/UseSSO&gt;&lt;MaxRedirects vt=&quot;3&quot;&gt;5&lt;/MaxRedirects&gt;&lt;ContentType vt=&quot;8&quot;&gt;application/xml&lt;/ContentType&gt;&lt;Username vt=&quot;8&quot;&gt;&lt;/Username&gt;&lt;Password vt=&quot;8&quot;&gt;&lt;/Password&gt;&lt;Certificate vt=&quot;8&quot;&gt;&lt;/Certificate&gt;&lt;RequestTimeout vt=&quot;3&quot;&gt;30000&lt;/RequestTimeout&gt;&lt;/CustomProps&gt;</TransportTypeData>
         <RetryCount>3</RetryCount>
