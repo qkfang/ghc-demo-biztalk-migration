@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SuperFundManagement.Functions.Tests/SuperFundManagement.Functions.Tests.csproj" />
+  <Project Path="SuperFundManagement.Functions/SuperFundManagement.Functions.csproj" />
+</Solution>
