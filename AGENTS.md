@@ -1,8 +1,8 @@
 # AGENTS.md
 
-## Repository Purpose
+## Repository 
 
-Demo repository showing how GitHub Copilot accelerates migrating a legacy BizTalk Server 2020 integration to Azure Functions v4 (.NET 8).
+Migrating a legacy BizTalk Server 2020 integration to Azure Functions v4 (.NET 8).
 
 ## Scenario
 
@@ -17,16 +17,16 @@ A Superannuation Fund Management integration that:
 |--------|----------|
 | `app-biztalk/` | Original BizTalk Server 2020 solution (schemas, maps, orchestrations) |
 | `app-fundadmin/` | Mock downstream fund administration API (.NET 8) |
-| `func/` | Migrated Azure Functions v4 app + xUnit tests (generated) |
-| `bicep/` | Bicep infrastructure templates (generated) |
+| `az/funcapp/` | Migrated Azure Functions v4 app + xUnit tests (generated) |
+| `az/bicep/` | Bicep infrastructure templates (generated) |
+| `az/scripts/` | Local test scripts |
 | `docs/` | Architecture docs, migration plan, demo script |
-| `scripts/` | Local test scripts |
 
 ## Migration Output
 
 When migrating, generate files into:
-- `func/` — C# .NET 8 isolated worker Azure Functions app and xUnit tests
-- `bicep/` — Bicep modules for storage, app service plan, app insights, and function app
+- `az/funcapp/` — C# .NET 8 isolated worker Azure Functions app and xUnit tests
+- `az/bicep/` — Bicep modules for storage, app service plan, app insights, and function app
 
 ## Key BizTalk Artifacts
 

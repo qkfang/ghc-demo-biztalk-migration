@@ -9,21 +9,22 @@ The current superannuation fund management solution runs on **BizTalk Server 202
 ### Architecture Diagram
 
 ```mermaid
-flowchart LR
-    CLIENT(["fa:fa-building API Consumer\nHTTP POST · application/xml"])
+flowchart TB
+    CLIENT(["🏢 API Consumer\nHTTP POST · application/xml"])
 
-    subgraph ONPREM["🏢  On-Premises / IaaS Virtual Machine"]
-        direction LR
-        subgraph BTS["⚙️  BizTalk Server 2020  ·  IIS + ISAPI"]
-            direction LR
+    subgraph ONPREM["On-Premises / IaaS Virtual Machine"]
+        direction TB
+        subgraph BTS["⚙️ BizTalk Server 2020 · IIS + ISAPI"]
+            direction TB
             RL["📥 HTTP Receive Location\nBizTalk HTTP Adapter"]
             RP["Receive Pipeline\nXML Disassembly & Validation"]
             OE["Orchestration Engine\nXLANG/s Runtime"]
             MAP["🗺️ Message Map\nContributionToAllocationMap.btm"]
             SP["📤 HTTP Send Port\nBizTalk HTTP Adapter"]
+            RL --> RP --> OE --> MAP --> OE --> SP
         end
-        subgraph SQL["🗄️  SQL Server"]
-            direction TB
+        subgraph SQL["🗄️ SQL Server"]
+            direction LR
             MGMT[("BizTalk\nManagement DB")]
             MSG[("MessageBox DB")]
         end
@@ -32,14 +33,10 @@ flowchart LR
     DS(["🏦 Downstream Fund\nAdministration Service"])
 
     CLIENT -->|"HTTP POST"| RL
-    RL --> RP
-    RP -->|persist| MSG
-    MSG --> OE
-    OE --> MAP
-    MAP --> OE
-    OE --> SP
-    SP -->|"HTTP POST\napplication/xml"| DS
+    RP -.->|persist| MSG
+    MSG -.-> OE
     BTS -.->|config| MGMT
+    SP -->|"HTTP POST · application/xml"| DS
 
     style ONPREM fill:#f5f5f5,stroke:#999,color:#333
     style BTS fill:#dce8f5,stroke:#4a86c8,color:#1a3a5c
@@ -72,24 +69,26 @@ The target solution runs as an **Azure Function** on the Consumption plan — fu
 ### Architecture Diagram
 
 ```mermaid
-flowchart LR
-    CLIENT(["fa:fa-building API Consumer\nHTTP POST · application/xml"])
+flowchart TB
+    CLIENT(["🏢 API Consumer\nHTTP POST · application/xml"])
 
-    subgraph AZURE["☁️  Microsoft Azure"]
-        direction LR
-        subgraph FUNC["⚡  Azure Functions — Consumption Plan"]
+    subgraph AZURE["☁️ Microsoft Azure"]
+        direction TB
+        subgraph FUNC["⚡ Azure Functions — Consumption Plan"]
             direction TB
             FN["📨 SuperContributionFunction\nHttpTrigger · POST /api/contributions"]
-            DESER["1️⃣  Deserialize\nXmlSerializer.Deserialize()"]
-            VALID["2️⃣  Validate\nGuard clauses on required fields"]
-            TRANS["3️⃣  Transform\nIContributionTransformService.Transform()"]
-            SEND["4️⃣  Dispatch\nIFundAllocationSenderService.SendAsync()"]
-            RESP["5️⃣  Respond\n202 Accepted · { allocationId }"]
+            DESER["1️⃣ Deserialize\nXmlSerializer.Deserialize()"]
+            VALID["2️⃣ Validate\nGuard clauses on required fields"]
+            TRANS["3️⃣ Transform\nIContributionTransformService.Transform()"]
+            SEND["4️⃣ Dispatch\nIFundAllocationSenderService.SendAsync()"]
+            RESP["5️⃣ Respond\n202 Accepted · { allocationId }"]
             FN --> DESER --> VALID --> TRANS --> SEND --> RESP
         end
-
-        AI["📊 Application Insights\n+ Log Analytics Workspace\nTraces · Metrics · Alerts · Dashboards"]
-        STORE[("🗄️ Azure Storage\nAzureWebJobsStorage\nRuntime host management")]
+        subgraph SUPPORT["Supporting Services"]
+            direction LR
+            AI["📊 Application Insights\n+ Log Analytics\nTraces · Metrics · Alerts"]
+            STORE[("🗄️ Azure Storage\nAzureWebJobsStorage")]
+        end
     end
 
     DS(["🏦 Downstream Fund\nAdministration Service"])
@@ -97,10 +96,11 @@ flowchart LR
     CLIENT -->|"HTTPS POST"| FN
     FUNC -.->|telemetry| AI
     FUNC -.->|runtime state| STORE
-    SEND -->|"HTTPS POST\napplication/xml"| DS
+    SEND -->|"HTTPS POST · application/xml"| DS
 
     style AZURE fill:#e3f2fd,stroke:#1565c0,color:#0d2f5e
     style FUNC fill:#dce8f5,stroke:#1976d2,color:#0d2f5e
+    style SUPPORT fill:#f8f9ff,stroke:#1565c0,color:#0d2f5e
     style AI fill:#f3e5f5,stroke:#8e24aa,color:#4a1060
     style STORE fill:#fff3e0,stroke:#e6a817,color:#7a4a00
     style CLIENT fill:#e8f5e9,stroke:#43a047,color:#1b5e20
