@@ -1,4 +1,29 @@
-# GitHub Copilot Demo Script
+# Copilot Migration Demo Guide
+
+
+## Demo Guide
+
+
+### GitHub Copilot
+Use GitHub coding agent to create migration.
+
+
+```
+migrate Biztalk integration to Azure Functions
+```
+
+```
+migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
+
+- create the integraiton logics as a c# function app inside `func`
+- create tests for the integration inside `func`
+- create IaC deployment for azure inside `bicep`
+
+keep the init migration process simple and as it as
+
+```
+
+
 ## BizTalk to Azure Functions Migration (~10 minutes)
 
 ---
