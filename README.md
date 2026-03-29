@@ -156,6 +156,11 @@ See [bicep/README.md](bicep/README.md) for full deployment steps.
 
 Use GitHub coding agent to create migration.
 
+
+```
+migrate Biztalk integration to Azure Functions
+```
+
 ```
 migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
 
