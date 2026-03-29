@@ -11,7 +11,14 @@
 
 ---
 
-## Step 1
+### Step 1
+
+Quickly show existing legacy biztalk project and explain the integraiton
+
+
+---
+
+### Step 2
 
 Understand current BizTalk project using `github copilot chat`, use an Opus 4.6 model.
 
@@ -25,7 +32,7 @@ biztalk source code is under `app-biztalk` folder. Keep it simple, include these
 
 ---
 
-### Step 2
+### Step 3
 
 Create a customised BizTalk migration agent using `Claude` agent.
 
@@ -35,7 +42,7 @@ Create a customised BizTalk migration agent using `Claude` agent.
 
 ---
 
-### Step 3
+### Step 4
 
 run `copilot` in CLI to open github copilot cli, and create a migration ticket
 
@@ -54,7 +61,7 @@ keep the init migration process simple and as it as'
 
 ---
 
-### Step 4
+### Step 5
 
 Use GitHub coding agent to implement the code. go to github.com and assign the ticket to github copilot.
 
@@ -73,14 +80,14 @@ keep the init migration process simple and as it as'
 
 ---
 
-### Step 5
+### Step 6
 
 Watch agent integration and start up. then switch to an existing ticket to show the outcome
 
 ---
 
 
-### Step 6
+### Step 7
 
 Switch to the agent working branch and checkout the code to run. run func app test and endpoint
 
