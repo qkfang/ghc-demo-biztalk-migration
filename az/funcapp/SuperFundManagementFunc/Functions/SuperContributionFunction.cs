@@ -5,7 +5,10 @@ using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using SuperFundManagement.Functions.Models;
 using SuperFundManagement.Functions.Services;
 
@@ -28,6 +31,22 @@ public class SuperContributionFunction
     }
 
     [Function("SuperContribution")]
+    [OpenApiOperation(operationId: "SubmitSuperContribution", tags: ["SuperFundManagement"],
+        Summary = "Submit a super contribution request",
+        Description = "Receives an XML SuperContributionRequest, transforms it to a FundAllocationInstruction, and forwards it to the fund administration API.",
+        Visibility = OpenApiVisibilityType.Important)]
+    [OpenApiRequestBody(contentType: "application/xml", bodyType: typeof(SuperContributionRequest),
+        Required = true,
+        Description = "XML payload conforming to the SuperContributionRequest schema")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Accepted, contentType: "application/json", bodyType: typeof(object),
+        Summary = "Accepted",
+        Description = "Contribution accepted and allocation dispatched. Returns allocation summary.")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "text/plain", bodyType: typeof(string),
+        Summary = "Bad Request",
+        Description = "Invalid XML or transformation error.")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadGateway, contentType: "text/plain", bodyType: typeof(string),
+        Summary = "Bad Gateway",
+        Description = "Downstream fund admin API returned an error.")]
     public async Task<HttpResponseData> Run(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "SuperFundManagement/Receive")]
         HttpRequestData req)
