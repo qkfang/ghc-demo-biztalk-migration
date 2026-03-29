@@ -83,13 +83,33 @@ keep the init migration process simple and as it as'
 
 ### Step 6
 
-Observe the Copilot agent working through the migration. Once complete, review the finished pull request to show the outcome.
+Observe the Copilot agent working through the migration for 1-2 minutes. Then navigate to an already implemented ticket to show the final implementation.
 
 ---
 
 
 ### Step 7
 
-Check out the agent's working branch, run the Function App tests, and call the endpoint to verify the migrated integration returns the expected response.
+Check out the agent's working branch locally, run the Function App tests, and call the endpoint to verify the migrated integration returns the expected response.
+
+---
+
+### Step 8
+
+Ask a question in the chat to ask agent to find mapping logics for `ContributionMapHelper.cs`
+
+Ask copilot to example one class in c# function app
+
+Ask copilot to create a github action pipeline to deploy `az\bicep` to azure, and microsoft learn to explain what is funct app.
+
+
+---
+
+### Step 9
+
+Include work context to github copilot via Work-IQ and Foundry-IQ
+
+Ask questions about a file in my sharepoint and a knowledge question from AI Search.
+
 
 ---

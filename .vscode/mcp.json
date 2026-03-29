@@ -7,6 +7,17 @@
     "microsoft-docs": {
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "foundry-iq": {
+      "type": "http",
+      "url": "https://iq-search-v2bikxc7i4fq2.search.windows.net/knowledgebases/earth-knowledge-base/mcp?api-version=2025-11-01-Preview",
+      "headers": {
+        "api-key": "xx"
+      }
+    },
+    "work-iq": {
+      "command": "npx",
+      "args": ["-y", "@microsoft/workiq@latest", "mcp"]
     }
   }
 }
