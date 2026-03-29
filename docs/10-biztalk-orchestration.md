@@ -12,28 +12,28 @@ The `SuperContributionOrchestration` is a BizTalk Server 2020 orchestration that
 
 ```mermaid
 flowchart LR
-    EPS["Employer\nPayroll System"]
+    EPS["Employer<br/>Payroll System"]
 
     subgraph BizTalk["BizTalk Server 2020"]
-        RP["ContributionHttpReceive\n─────────────────\nAdapter: HTTP :7070\nPipeline: HttpReceivePipeline\n  • XML Disassembler\n  • XML Validator\nSchema: SuperContributionRequest"]
+        RP["ContributionHttpReceive<br/>─────────────────<br/>Adapter: HTTP :7070<br/>Pipeline: HttpReceivePipeline<br/>• XML Disassembler<br/>• XML Validator<br/>Schema: SuperContributionRequest"]
 
         subgraph ORCH["SuperContributionOrchestration"]
             direction TB
-            R["① Receive\nReceiveContributionPort\nMsg: SuperContributionRequestMsg\nInit CorrelationSet: ContributionId"]
-            C["② Construct\nContributionToAllocationMap\n  • FA- prefix functoid\n  • Looping functoid\n  • PENDING constant\n  • FormatABN scripting"]
-            S["③ Send\nSendAllocationPort\nMsg: FundAllocationInstructionMsg\nFollow CorrelationSet"]
+            R["① Receive<br/>ReceiveContributionPort<br/>Msg: SuperContributionRequestMsg<br/>Init CorrelationSet: ContributionId"]
+            C["② Construct<br/>ContributionToAllocationMap<br/>• FA- prefix functoid<br/>• Looping functoid<br/>• PENDING constant<br/>• FormatABN scripting"]
+            S["③ Send<br/>SendAllocationPort<br/>Msg: FundAllocationInstructionMsg<br/>Follow CorrelationSet"]
             R --> C --> S
         end
 
-        SP["AllocationHttpSend\n─────────────────\nAdapter: HTTP POST\nPipeline: HttpSendPipeline\n  • XML Assembler (UTF-8)\nRetry: 3 × 5s"]
+        SP["AllocationHttpSend<br/>─────────────────<br/>Adapter: HTTP POST<br/>Pipeline: HttpSendPipeline<br/>• XML Assembler (UTF-8)<br/>Retry: 3 × 5s"]
     end
 
-    FAP["Fund Admin\nPlatform\n/api/allocations"]
+    FAP["Fund Admin<br/>Platform<br/>/api/allocations"]
 
-    EPS -->|"HTTP POST :7070\n/SuperFundManagement/Receive"| RP
+    EPS -->|"HTTP POST :7070 /SuperFundManagement/Receive"| RP
     RP --> ORCH
     ORCH --> SP
-    SP -->|"HTTP POST\napplication/xml"| FAP
+    SP -->|"HTTP POST application/xml"| FAP
 ```
 
 ---
