@@ -1,10 +1,10 @@
-# BizTalk to Azure Functions Migration Demo
+# BizTalk to Azure Functions Migration
 
 A complete, live demo repository for the **"GitHub Copilot: BizTalk to Azure Functions Migration"** demonstration. It shows how GitHub Copilot accelerates the migration of a legacy BizTalk Server 2020 integration to a cloud-native Azure Functions v4 (.NET 8) solution.
 
 ---
 
-## Demo Scenario
+## Migration Scenario
 
 A **Superannuation Fund Management** integration for a super company that:
 
@@ -75,6 +75,10 @@ Expected response:
 ```
 
 See [az/funcapp/README.md](az/funcapp/README.md) for full details.
+
+![Azure Functions Swagger UI](docs/res/funcapp-swagger.png)
+
+![Fund Admin – Received Allocations](docs/res/mock-fundadmin.png)
 
 ### Run Tests
 
