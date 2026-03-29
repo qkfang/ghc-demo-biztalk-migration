@@ -8,38 +8,44 @@ The current superannuation fund management solution runs on **BizTalk Server 202
 
 ### Architecture Diagram
 
-```
-┌───────────────────────────────────────────────────────────────────────────────┐
-│                        On-Premises / IaaS VM                                  │
-│                                                                               │
-│  ┌──────────────┐    ┌─────────────────────────────────────────────────────┐  │
-│  │  SQL Server  │    │              BizTalk Server 2020                    │  │
-│  │              │    │                                                     │  │
-│  │  ┌─────────┐ │    │  ┌──────────┐   ┌──────────┐   ┌──────────────┐   │  │
-│  │  │BizTalk  │◀│────│  │ Receive  │   │Orchestr. │   │  Send Port   │   │  │
-│  │  │Mgmt DB  │ │    │  │ Location │──▶│  Engine  │──▶│  (HTTP)      │   │  │
-│  │  └─────────┘ │    │  │  (HTTP)  │   │          │   │              │   │  │
-│  │              │    │  └──────────┘   └──────────┘   └──────┬───────┘   │  │
-│  │  ┌─────────┐ │    │       │                               │           │  │
-│  │  │Message- │◀│────│  ┌────▼─────┐   ┌──────────┐         │           │  │
-│  │  │Box DB   │ │    │  │Receive   │   │  Map     │         │           │  │
-│  │  └─────────┘ │    │  │Pipeline  │   │  (.btm)  │         │           │  │
-│  │              │    │  │(XML Dasm)│   └──────────┘         │           │  │
-│  └──────────────┘    │  └──────────┘                        │           │  │
-│                      │                                      │           │  │
-│  ┌──────────────┐    │  IIS + ISAPI                         │           │  │
-│  │   Windows    │    │                                      │           │  │
-│  │   Server     │    └──────────────────────────────────────┼───────────┘  │
-│  └──────────────┘                                           │               │
-└────────────────────────────────────────────────────────────┼───────────────┘
-                                                             │
-                              HTTP POST (application/xml)    │
-                                                             ▼
-                                                  ┌──────────────────┐
-                                                  │  Downstream      │
-                                                  │  Fulfillment     │
-                                                  │  Service         │
-                                                  └──────────────────┘
+```mermaid
+flowchart LR
+    CLIENT(["fa:fa-building API Consumer\nHTTP POST · application/xml"])
+
+    subgraph ONPREM["🏢  On-Premises / IaaS Virtual Machine"]
+        direction LR
+        subgraph BTS["⚙️  BizTalk Server 2020  ·  IIS + ISAPI"]
+            direction LR
+            RL["📥 HTTP Receive Location\nBizTalk HTTP Adapter"]
+            RP["Receive Pipeline\nXML Disassembly & Validation"]
+            OE["Orchestration Engine\nXLANG/s Runtime"]
+            MAP["🗺️ Message Map\nContributionToAllocationMap.btm"]
+            SP["📤 HTTP Send Port\nBizTalk HTTP Adapter"]
+        end
+        subgraph SQL["🗄️  SQL Server"]
+            direction TB
+            MGMT[("BizTalk\nManagement DB")]
+            MSG[("MessageBox DB")]
+        end
+    end
+
+    DS(["🏦 Downstream Fund\nAdministration Service"])
+
+    CLIENT -->|"HTTP POST"| RL
+    RL --> RP
+    RP -->|persist| MSG
+    MSG --> OE
+    OE --> MAP
+    MAP --> OE
+    OE --> SP
+    SP -->|"HTTP POST\napplication/xml"| DS
+    BTS -.->|config| MGMT
+
+    style ONPREM fill:#f5f5f5,stroke:#999,color:#333
+    style BTS fill:#dce8f5,stroke:#4a86c8,color:#1a3a5c
+    style SQL fill:#fff3e0,stroke:#e6a817,color:#7a4a00
+    style CLIENT fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    style DS fill:#e8f5e9,stroke:#43a047,color:#1b5e20
 ```
 
 ### Component Inventory
@@ -65,37 +71,40 @@ The target solution runs as an **Azure Function** on the Consumption plan — fu
 
 ### Architecture Diagram
 
-```
-                         Microsoft Azure
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  ┌──────────────────┐   ┌────────────────────────────────────────────────┐  │
-│  │  Application     │   │  Azure Functions (Consumption Plan)            │  │
-│  │  Insights        │   │                                                │  │
-│  │  + Log Analytics │   │  func-order-processingdev.azurewebsites.net    │  │
-│  │                  │   │                                                │  │
-│  │  • Traces        │◀──│  POST /api/contributions                              │  │
-│  │  • Metrics       │   │  ┌──────────────────────────────────────────┐  │  │
-│  │  • Alerts        │   │  │  SuperContributionFunction                 │  │  │
-│  │  • Dashboards    │   │  │                                          │  │  │
-│  └──────────────────┘   │  │  1. XmlSerializer.Deserialize()          │  │  │
-│                         │  │  2. ValidateOrder()                      │  │  │
-│  ┌──────────────────┐   │  │  3. IContributionTransformService.Transform()   │  │  │
-│  │  Azure Storage   │   │  │  4. IFundAllocationSenderService.SendAsync()│  │  │
-│  │  (AzureWebJobs   │◀──│  │  5. return 202 { allocationId }         │  │  │
-│  │   Storage)       │   │  └──────────────────────────────────────────┘  │  │
-│  └──────────────────┘   │                                                │  │
-│                         └───────────────────────┬────────────────────────┘  │
-│                                                 │                            │
-└─────────────────────────────────────────────────┼────────────────────────────┘
-                                                  │
-                         HTTPS POST (application/xml)
-                                                  ▼
-                                       ┌──────────────────┐
-                                       │  Downstream      │
-                                       │  Fulfillment     │
-                                       │  Service         │
-                                       └──────────────────┘
+```mermaid
+flowchart LR
+    CLIENT(["fa:fa-building API Consumer\nHTTP POST · application/xml"])
+
+    subgraph AZURE["☁️  Microsoft Azure"]
+        direction LR
+        subgraph FUNC["⚡  Azure Functions — Consumption Plan"]
+            direction TB
+            FN["📨 SuperContributionFunction\nHttpTrigger · POST /api/contributions"]
+            DESER["1️⃣  Deserialize\nXmlSerializer.Deserialize()"]
+            VALID["2️⃣  Validate\nGuard clauses on required fields"]
+            TRANS["3️⃣  Transform\nIContributionTransformService.Transform()"]
+            SEND["4️⃣  Dispatch\nIFundAllocationSenderService.SendAsync()"]
+            RESP["5️⃣  Respond\n202 Accepted · { allocationId }"]
+            FN --> DESER --> VALID --> TRANS --> SEND --> RESP
+        end
+
+        AI["📊 Application Insights\n+ Log Analytics Workspace\nTraces · Metrics · Alerts · Dashboards"]
+        STORE[("🗄️ Azure Storage\nAzureWebJobsStorage\nRuntime host management")]
+    end
+
+    DS(["🏦 Downstream Fund\nAdministration Service"])
+
+    CLIENT -->|"HTTPS POST"| FN
+    FUNC -.->|telemetry| AI
+    FUNC -.->|runtime state| STORE
+    SEND -->|"HTTPS POST\napplication/xml"| DS
+
+    style AZURE fill:#e3f2fd,stroke:#1565c0,color:#0d2f5e
+    style FUNC fill:#dce8f5,stroke:#1976d2,color:#0d2f5e
+    style AI fill:#f3e5f5,stroke:#8e24aa,color:#4a1060
+    style STORE fill:#fff3e0,stroke:#e6a817,color:#7a4a00
+    style CLIENT fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    style DS fill:#e8f5e9,stroke:#43a047,color:#1b5e20
 ```
 
 ### Component Inventory
