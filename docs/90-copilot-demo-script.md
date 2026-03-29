@@ -13,21 +13,29 @@
 
 ## Step 1
 
-Understand current biztalk project
+Understand current BizTalk project
 
 ```
 #agent create 'biztalk.md' mermaid diagram markdown file to describe current biztalk project.
-biztalk source code is under `app-biztalk` folder. Only include these:
+biztalk source code is under `app-biztalk` folder. Keep it simple, include these:
 - End-to-End Message Flow
-- Orchestration Steps
 - Schema Structures
-- Transformation Overview
 - Field-by-Field Mapping Table
 ```
 
 ---
 
 ### Step 2
+
+Create a customised BizTalk migration agent
+
+```
+/create-agent  create or update `biztalk-migration.agent.md` to include requirements and guildlines. Keep it simple, 
+```
+
+---
+
+### Step 3
 
 Use GitHub coding agent to create migration
 
@@ -75,18 +83,6 @@ Generate an Azure Functions v4 .NET 8 isolated worker C# class with:
 - Returns 502 if the downstream service fails
 ```
 
-### Expected Copilot Output
-
-Copilot generates a complete function class including:
-- Constructor injection
-- `XmlSerializer.Deserialize()` for the request body
-- `ValidateOrder()` helper method
-- Try/catch with appropriate HTTP status codes
-- `ILogger` usage
-
-### Talking Points
-
-> "Notice how Copilot understood the BizTalk pattern — receive, transform, send — and translated it directly to Azure Functions concepts: HTTP trigger, service injection, and proper error codes. This would have taken a developer half a day to write from scratch."
 
 ---
 
