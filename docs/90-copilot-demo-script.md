@@ -3,40 +3,46 @@
 
 ## Demo Guide
 
+---
 
-### GitHub Copilot
-Use GitHub coding agent to create migration.
+### Setup Checklist
 
-
-```
-migrate Biztalk integration to Azure Functions
-```
-
-```
-migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
-
-- create the integraiton logics as a c# function app inside `func`
-- create tests for the integration inside `func`
-- create IaC deployment for azure inside `bicep`
-
-keep the init migration process simple and as it as
-
-```
-
-
-## BizTalk to Azure Functions Migration (~10 minutes)
+- MCP tools enabled
 
 ---
 
-### Setup Checklist (Before Demo)
+## Step 1
 
-- [ ] VS Code open with this repository
-- [ ] GitHub Copilot extension installed and signed in
-- [ ] Copilot Chat panel open (Ctrl+Shift+I)
-- [ ] `az/funcapp/SuperFundManagementFunc` open in Explorer sidebar
-- [ ] `biztalk/SuperFundManagement/Maps/ContributionToAllocationMap.btm` open in an editor tab
-- [ ] Terminal open in `az/funcapp/` folder
-- [ ] Font size bumped up for visibility
+Understand current biztalk project
+
+```
+#agent create 'biztalk.md' mermaid diagram markdown file to describe current biztalk project.
+biztalk source code is under `app-biztalk` folder. Only include these:
+- End-to-End Message Flow
+- Orchestration Steps
+- Schema Structures
+- Transformation Overview
+- Field-by-Field Mapping Table
+```
+
+---
+
+### Step 2
+
+Use GitHub coding agent to create migration
+
+```
+#agent create an issue ticket in github copilot for biztalk migration
+
+title: 'migrate Biztalk integration to Azure Functions'
+body: 'migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
+- create the integraiton logics as a c# function app inside `az\funcapp`
+- create tests for the integration inside `az\funcapp`
+- create IaC deployment for azure inside `az\bicep`
+
+keep the init migration process simple and as it as'
+
+```
 
 ---
 

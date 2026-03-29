@@ -87,8 +87,8 @@ private static decimal CalculateNetContribution(decimal gross)
 
 ### Step 5 — File Placement & Namespace
 
-- Interface: `az/funcapp/<AppName>/Services/I<Name>TransformService.cs`
-- Implementation: `az/funcapp/<AppName>/Services/<Name>TransformService.cs`
+- Interface: `func/<AppName>/Services/I<Name>TransformService.cs`
+- Implementation: `func/<AppName>/Services/<Name>TransformService.cs`
 - Namespace: `<AppName>.Functions.Services`
 - Add `using System.Text.RegularExpressions;` if `FormatABN` is on needed
 - **Do not** add `ILogger` to the transform service (it is pure data transformation — no side effects)
