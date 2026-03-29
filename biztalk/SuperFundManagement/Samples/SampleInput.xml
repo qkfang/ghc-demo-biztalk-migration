@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sample BizTalk input message for the SuperFundManagement solution.
+  Schema: SuperContributionSchema.xsd
+  Namespace: http://SuperFundManagement.Schemas.SuperContribution
+
+  This XML is received on the ContributionHttpReceive port (HTTP POST /SuperFundManagement/Receive)
+  and processed by the ContributionToAllocationMap map before being forwarded to the
+  AllocationHttpSend port.
+
+  Scripting Functoid transformations applied by ContributionToAllocationMap:
+    • Functoid 3 (FormatABN)            : EmployerABN "51824753556"
+                                          → formatted as "51 824 753 556" in the output ABN field
+    • Functoid 4 (CalculateNetContribution): GrossAmount values are reduced by 15% contributions tax
+                                          875.00 → 743.75
+                                          750.00 → 637.50
+-->
+<SuperContributionRequest xmlns="http://SuperFundManagement.Schemas.SuperContribution">
+  <ContributionId>CONT-2024-001</ContributionId>
+  <EmployerId>EMP-001</EmployerId>
+  <EmployerName>Acme Corporation Pty Ltd</EmployerName>
+  <EmployerABN>51824753556</EmployerABN>
+  <PayPeriodEndDate>2024-06-30</PayPeriodEndDate>
+  <Members>
+    <Member>
+      <MemberAccountNumber>SF-100001</MemberAccountNumber>
+      <MemberName>Jane Smith</MemberName>
+      <ContributionType>SuperannuationGuarantee</ContributionType>
+      <GrossAmount>875.00</GrossAmount>
+    </Member>
+    <Member>
+      <MemberAccountNumber>SF-100002</MemberAccountNumber>
+      <MemberName>John Citizen</MemberName>
+      <ContributionType>SuperannuationGuarantee</ContributionType>
+      <GrossAmount>750.00</GrossAmount>
+    </Member>
+  </Members>
+  <TotalContribution>1625.00</TotalContribution>
+  <Currency>AUD</Currency>
+  <PaymentReference>PAY-REF-20240630</PaymentReference>
+</SuperContributionRequest>
