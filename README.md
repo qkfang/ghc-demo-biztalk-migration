@@ -33,7 +33,7 @@ msbuild biztalk/SuperFundManagement.sln /p:Configuration=Release
 BTSTask ImportBindings /ApplicationName:SuperFundManagement /Source:biztalk/SuperFundManagement/BindingFile.xml
 ```
 
-See [biztalk/README.md](biztalk/README.md) for full deployment instructions.
+See [app-biztalk/README.md](app-biztalk/README.md) for full deployment instructions.
 
 ## Future State: Azure Integration
 
@@ -48,7 +48,7 @@ az deployment group create \
   --parameters bicep/main.bicepparam
 ```
 
-See [bicep/README.md](bicep/README.md) for full deployment steps.
+See [az/bicep/README.md](az/bicep/README.md) for full deployment steps.
 
 
 ### Azure Functions App
@@ -90,10 +90,10 @@ dotnet test SuperFundManagementFunc.sln --verbosity normal
 
 | Document | Description |
 |---|---|
-| [docs/architecture.md](docs/architecture.md) | Current vs target architecture with ASCII diagrams |
-| [docs/biztalk-orchestration.md](docs/biztalk-orchestration.md) | BizTalk solution deep-dive |
-| [docs/migration-guide.md](docs/migration-guide.md) | Step-by-step migration guide |
-| [docs/copilot-demo-script.md](docs/copilot-demo-script.md) | Live demo script with Copilot prompts |
+| [docs/20-future-state-architecture.md](docs/20-future-state-architecture.md) | Current vs target architecture with ASCII diagrams |
+| [docs/10-biztalk-orchestration.md](docs/10-biztalk-orchestration.md) | BizTalk solution deep-dive |
+| [docs/30-migration-plan.md](docs/30-migration-plan.md) | Step-by-step migration guide |
+| [docs/90-copilot-demo-script.md](docs/90-copilot-demo-script.md) | Live demo script with Copilot prompts |
 
 ---
 
