@@ -1,120 +1,4 @@
-# Migration Guide: BizTalk Server → Azure Functions
-
-## Why Migrate?
-
-### Cost
-
-| Factor              | BizTalk Server 2020                          | Azure Functions (Consumption)                 |
-|---------------------|----------------------------------------------|-----------------------------------------------|
-| Licensing           | ~$15,000–$50,000/server/year                 | Pay-per-execution (~$0.20 per 1M invocations) |
-| Infrastructure      | Dedicated VMs + SQL Server cluster           | Serverless — no VM management                 |
-| Operations          | BizTalk Admin + IIS + SQL DBA                | Managed platform, Azure Monitor               |
-| Idle cost           | Always-on VMs billed 24/7                    | Zero cost when idle (Consumption plan)        |
-
-### Scalability
-
-BizTalk scales **vertically** (bigger VMs) or **horizontally** (additional BizTalk servers in a group). Both require manual configuration and significant overhead.
-
-Azure Functions scales **automatically** and **instantly** — from 0 to hundreds of concurrent instances within seconds, driven by incoming HTTP load.
-
-### Cloud-Native Benefits
-
-- **DevOps integration**: CI/CD pipelines deploy a zip file — no BizTalk deployment MSIs
-- **Observability**: Application Insights provides distributed tracing out of the box
-- **Security**: Managed identities, Key Vault integration, no stored credentials
-- **Portability**: Standard .NET 8 code — runs locally, in containers, or on any cloud
-
----
-
-## Architecture Comparison
-
-### BizTalk Server 2020 (Current State)
-
-```
-HTTP Client
-    │
-    │ POST /SuperFundManagement/Receive (port 7070)
-    ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│  BizTalk Server 2020                                                 │
-│                                                                      │
-│  IIS + ISAPI Extension                                               │
-│      │                                                               │
-│      ▼                                                               │
-│  Receive Location (HTTP Adapter)                                     │
-│      │ HttpReceivePipeline (XML Disassembler + Validator)            │
-│      ▼                                                               │
-│  MessageBox (SQL Server)                                             │
-│      │                                                               │
-│      ▼                                                               │
-│  Orchestration (SuperFundManagementOrchestration.odx)                   │
-│      ├─ Receive shape                                                │
-│      ├─ Construct/Transform shape (ContributionToAllocationMap.btm)        │
-│      └─ Send shape                                                   │
-│      │                                                               │
-│      ▼                                                               │
-│  MessageBox (SQL Server)                                             │
-│      │                                                               │
-│      ▼                                                               │
-│  Send Port (AllocationHttpSend)                                     │
-│      │ HttpSendPipeline (XML Assembler)                              │
-│      │ HTTP Adapter                                                   │
-└──────────────────────────────────────────────────────────────────────┘
-    │
-    │ POST http://downstream-service/api/fulfillment
-    ▼
-Downstream Fulfillment Service
-```
-
-### Azure Functions v4 / .NET 8 (Target State)
-
-```
-HTTP Client
-    │
-    │ POST /api/contributions
-    ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│  Azure Functions (Consumption Plan)                                  │
-│                                                                      │
-│  HTTP Trigger: SuperContributionFunction.ProcessContribution()                │
-│      │                                                               │
-│      ├─ Deserialize XML → SuperContribution (XmlSerializer)                │
-│      ├─ Validate (ContributionId, EmployerId, Members)                        │
-│      ├─ IContributionTransformService.Transform()                           │
-│      │       (equivalent of ContributionToAllocationMap.btm)              │
-│      ├─ IFundAllocationSenderService.SendAsync()                        │
-│      │       (equivalent of AllocationHttpSend port)               │
-│      └─ Return 202 Accepted { allocationId, status }                │
-└──────────────────────────────────────────────────────────────────────┘
-    │
-    │ POST https://downstream-service/api/fulfillment
-    ▼
-Downstream Fulfillment Service
-```
-
----
-
-## Component Mapping
-
-| BizTalk Concept                    | Azure Functions Equivalent                                      |
-|------------------------------------|-----------------------------------------------------------------|
-| HTTP Receive Location              | `[HttpTrigger]` attribute on function                           |
-| Receive Pipeline (XML Disassembler)| `XmlSerializer.Deserialize()` in function body                  |
-| MessageBox                         | Function parameter / in-memory object                           |
-| Orchestration                      | Azure Function class method                                     |
-| Message Construction shape         | C# object instantiation (`new FundAllocationInstruction { ... }`)        |
-| Transform shape + `.btm` map file  | `IContributionTransformService.Transform()` method                     |
-| String Concatenate functoid        | C# string interpolation: `$"FA-{contribution.ContributionId}"`               |
-| Multiplication functoid            | C# arithmetic: `item.Quantity * item.UnitPrice`                 |
-| Looping functoid                   | LINQ `.Select()` on `Items.Item`                                |
-| Send Pipeline (XML Assembler)      | `XmlSerializer.Serialize()` in `FundAllocationSenderService`       |
-| HTTP Send Port                     | `IFundAllocationSenderService.SendAsync()` via `HttpClient`        |
-| Binding File                       | `local.settings.json` / Azure App Settings                      |
-| BTSTask deploy                     | `az functionapp deployment source config-zip`                   |
-| BizTalk Admin Console              | Azure Portal / Azure CLI                                        |
-| BizTalk Group Hub (monitoring)     | Application Insights + Log Analytics                            |
-
----
+# Migration Plan: BizTalk to Azure Functions
 
 ## Migration Steps
 
@@ -200,6 +84,28 @@ az functionapp deployment source config-zip \
 
 ---
 
+## Component Mapping
+
+| BizTalk Concept                    | Azure Functions Equivalent                                      |
+|------------------------------------|-----------------------------------------------------------------|
+| HTTP Receive Location              | `[HttpTrigger]` attribute on function                           |
+| Receive Pipeline (XML Disassembler)| `XmlSerializer.Deserialize()` in function body                  |
+| MessageBox                         | Function parameter / in-memory object                           |
+| Orchestration                      | Azure Function class method                                     |
+| Message Construction shape         | C# object instantiation (`new FundAllocationInstruction { ... }`)        |
+| Transform shape + `.btm` map file  | `IContributionTransformService.Transform()` method                     |
+| String Concatenate functoid        | C# string interpolation: `$"FA-{contribution.ContributionId}"`               |
+| Multiplication functoid            | C# arithmetic: `item.Quantity * item.UnitPrice`                 |
+| Looping functoid                   | LINQ `.Select()` on `Items.Item`                                |
+| Send Pipeline (XML Assembler)      | `XmlSerializer.Serialize()` in `FundAllocationSenderService`       |
+| HTTP Send Port                     | `IFundAllocationSenderService.SendAsync()` via `HttpClient`        |
+| Binding File                       | `local.settings.json` / Azure App Settings                      |
+| BTSTask deploy                     | `az functionapp deployment source config-zip`                   |
+| BizTalk Admin Console              | Azure Portal / Azure CLI                                        |
+| BizTalk Group Hub (monitoring)     | Application Insights + Log Analytics                            |
+
+---
+
 ## Testing Strategy
 
 | Level           | BizTalk Approach                               | Azure Functions Approach                        |
@@ -224,24 +130,26 @@ az functionapp deployment source config-zip \
 
 ---
 
-## Rollback Plan
+## Why Migrate?
 
-### Immediate rollback (Azure Functions)
+### Cost
 
-1. In Azure Portal → Function App → Deployment Slots → swap `staging` ↔ `production`
-2. Or redeploy the previous zip artifact:
-   ```bash
-   az functionapp deployment source config-zip \
-     --resource-group rg-order-processing-prod \
-     --name func-order-processingprod \
-     --src ./previous-deploy.zip
-   ```
+| Factor              | BizTalk Server 2020                          | Azure Functions (Consumption)                 |
+|---------------------|----------------------------------------------|-----------------------------------------------|
+| Licensing           | ~$15,000–$50,000/server/year                 | Pay-per-execution (~$0.20 per 1M invocations) |
+| Infrastructure      | Dedicated VMs + SQL Server cluster           | Serverless — no VM management                 |
+| Operations          | BizTalk Admin + IIS + SQL DBA                | Managed platform, Azure Monitor               |
+| Idle cost           | Always-on VMs billed 24/7                    | Zero cost when idle (Consumption plan)        |
 
-### Fallback to BizTalk (during transition period)
+### Scalability
 
-While running both systems in parallel, maintain a feature flag or DNS-level routing:
+BizTalk scales **vertically** (bigger VMs) or **horizontally** (additional BizTalk servers in a group). Both require manual configuration and significant overhead.
 
-1. Keep BizTalk application in `Enlisted` state (not `Started`)
-2. If Azure Functions reports errors in Application Insights, update DNS/load balancer to route back to BizTalk endpoint
-3. `BTSTask StartApplication /ApplicationName:SuperFundManagement` to re-activate BizTalk
-4. Investigate and fix the Azure Functions issue, then re-cut over
+Azure Functions scales **automatically** and **instantly** — from 0 to hundreds of concurrent instances within seconds, driven by incoming HTTP load.
+
+### Cloud-Native Benefits
+
+- **DevOps integration**: CI/CD pipelines deploy a zip file — no BizTalk deployment MSIs
+- **Observability**: Application Insights provides distributed tracing out of the box
+- **Security**: Managed identities, Key Vault integration, no stored credentials
+- **Portability**: Standard .NET 8 code — runs locally, in containers, or on any cloud

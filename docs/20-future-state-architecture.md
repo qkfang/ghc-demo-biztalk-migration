@@ -10,39 +10,41 @@ The current superannuation fund management solution runs on **BizTalk Server 202
 
 ```mermaid
 flowchart TB
-    CLIENT(["🏢 API Consumer\nHTTP POST · application/xml"])
+    CLIENT(["🏢 API Consumer<br/>HTTP POST · application/xml"])
 
     subgraph ONPREM["On-Premises / IaaS Virtual Machine"]
         direction TB
         subgraph BTS["⚙️ BizTalk Server 2020 · IIS + ISAPI"]
             direction TB
-            RL["📥 HTTP Receive Location\nBizTalk HTTP Adapter"]
-            RP["Receive Pipeline\nXML Disassembly & Validation"]
-            OE["Orchestration Engine\nXLANG/s Runtime"]
-            MAP["🗺️ Message Map\nContributionToAllocationMap.btm"]
-            SP["📤 HTTP Send Port\nBizTalk HTTP Adapter"]
-            RL --> RP --> OE --> MAP --> OE --> SP
+            RL["📥 HTTP Receive Location<br/>BizTalk HTTP Adapter"]
+            RP["Receive Pipeline<br/>XML Disassembly & Validation"]
+            OE["Orchestration Engine<br/>XLANG/s Runtime"]
+            MAP["🗺️ Message Map<br/>ContributionToAllocationMap.btm"]
+            SP["📤 HTTP Send Port<br/>BizTalk HTTP Adapter"]
+            RL --> RP --> OE --> MAP --> SP
         end
         subgraph SQL["🗄️ SQL Server"]
             direction LR
-            MGMT[("BizTalk\nManagement DB")]
+            MGMT[("BizTalk<br/>Management DB")]
             MSG[("MessageBox DB")]
         end
     end
 
-    DS(["🏦 Downstream Fund\nAdministration Service"])
+    DS(["🏦 Downstream Fund<br/>Administration Service"])
 
-    CLIENT -->|"HTTP POST"| RL
-    RP -.->|persist| MSG
-    MSG -.-> OE
-    BTS -.->|config| MGMT
+    CLIENT -->|"HTTP POST · application/xml"| RL
     SP -->|"HTTP POST · application/xml"| DS
+    RP -. "persist" .-> MSG
+    MSG -. "route" .-> OE
+    BTS -. "config" .-> MGMT
 
-    style ONPREM fill:#f5f5f5,stroke:#999,color:#333
-    style BTS fill:#dce8f5,stroke:#4a86c8,color:#1a3a5c
-    style SQL fill:#fff3e0,stroke:#e6a817,color:#7a4a00
-    style CLIENT fill:#e8f5e9,stroke:#43a047,color:#1b5e20
-    style DS fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    classDef bts fill:#1B3A5C,stroke:#0D2440,color:#ffffff
+    classDef db fill:#963A16,stroke:#6E2A0F,color:#ffffff
+    classDef ext fill:#1B5E20,stroke:#0D3A11,color:#ffffff
+
+    class RL,RP,OE,MAP,SP bts
+    class MGMT,MSG db
+    class CLIENT,DS ext
 ```
 
 ### Component Inventory
@@ -70,41 +72,42 @@ The target solution runs as an **Azure Function** on the Consumption plan — fu
 
 ```mermaid
 flowchart TB
-    CLIENT(["🏢 API Consumer\nHTTP POST · application/xml"])
+    CLIENT(["🏢 API Consumer<br/>HTTP POST · application/xml"])
 
     subgraph AZURE["☁️ Microsoft Azure"]
         direction TB
         subgraph FUNC["⚡ Azure Functions — Consumption Plan"]
             direction TB
-            FN["📨 SuperContributionFunction\nHttpTrigger · POST /api/contributions"]
-            DESER["1️⃣ Deserialize\nXmlSerializer.Deserialize()"]
-            VALID["2️⃣ Validate\nGuard clauses on required fields"]
-            TRANS["3️⃣ Transform\nIContributionTransformService.Transform()"]
-            SEND["4️⃣ Dispatch\nIFundAllocationSenderService.SendAsync()"]
-            RESP["5️⃣ Respond\n202 Accepted · { allocationId }"]
+            FN["📨 SuperContributionFunction<br/>HttpTrigger · POST /api/contributions"]
+            DESER["1️⃣ Deserialize<br/>XmlSerializer.Deserialize()"]
+            VALID["2️⃣ Validate<br/>Guard clauses on required fields"]
+            TRANS["3️⃣ Transform<br/>IContributionTransformService.Transform()"]
+            SEND["4️⃣ Dispatch<br/>IFundAllocationSenderService.SendAsync()"]
+            RESP["5️⃣ Respond<br/>202 Accepted · { allocationId }"]
             FN --> DESER --> VALID --> TRANS --> SEND --> RESP
         end
         subgraph SUPPORT["Supporting Services"]
             direction LR
-            AI["📊 Application Insights\n+ Log Analytics\nTraces · Metrics · Alerts"]
-            STORE[("🗄️ Azure Storage\nAzureWebJobsStorage")]
+            AI["📊 Application Insights<br/>+ Log Analytics<br/>Traces · Metrics · Alerts"]
+            STORE[("🗄️ Azure Storage<br/>AzureWebJobsStorage")]
         end
     end
 
-    DS(["🏦 Downstream Fund\nAdministration Service"])
+    DS(["🏦 Downstream Fund<br/>Administration Service"])
 
-    CLIENT -->|"HTTPS POST"| FN
-    FUNC -.->|telemetry| AI
-    FUNC -.->|runtime state| STORE
+    CLIENT -->|"HTTPS POST · application/xml"| FN
     SEND -->|"HTTPS POST · application/xml"| DS
+    RESP -. "202 Accepted · allocationId" .-> CLIENT
+    FUNC -.->|telemetry| AI
+    FUNC -.->|"runtime state"| STORE
 
-    style AZURE fill:#e3f2fd,stroke:#1565c0,color:#0d2f5e
-    style FUNC fill:#dce8f5,stroke:#1976d2,color:#0d2f5e
-    style SUPPORT fill:#f8f9ff,stroke:#1565c0,color:#0d2f5e
-    style AI fill:#f3e5f5,stroke:#8e24aa,color:#4a1060
-    style STORE fill:#fff3e0,stroke:#e6a817,color:#7a4a00
-    style CLIENT fill:#e8f5e9,stroke:#43a047,color:#1b5e20
-    style DS fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    classDef fn fill:#0058AB,stroke:#003D7A,color:#ffffff
+    classDef support fill:#6B2FA0,stroke:#4A1B73,color:#ffffff
+    classDef ext fill:#1B5E20,stroke:#0D3A11,color:#ffffff
+
+    class FN,DESER,VALID,TRANS,SEND,RESP fn
+    class AI,STORE support
+    class CLIENT,DS ext
 ```
 
 ### Component Inventory
