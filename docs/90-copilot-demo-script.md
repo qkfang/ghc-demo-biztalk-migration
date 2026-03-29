@@ -52,7 +52,7 @@ Open **GitHub Copilot CLI** and create a GitHub issue to track the migration wor
 
 title: 'migrate Biztalk integration to Azure Functions'
 body: 'migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
-- create the integraiton logics as a c# function app inside `az\funcapp`
+- create the integraiton logics as a c# function app inside `az\funcapp` with swagger ui
 - create tests for the integration inside `az\funcapp`
 - create IaC deployment for azure inside `az\bicep`
 
