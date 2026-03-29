@@ -152,6 +152,25 @@ See [bicep/README.md](bicep/README.md) for full deployment steps.
 
 ---
 
+## Demo
+
+Use GitHub coding agent to create migration.
+
+```
+migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
+
+- create the integraiton logics as a c# function app inside `func`
+- create tests for the integration inside `func`
+- create IaC deployment for azure inside `bicep`
+
+keep the init migration process simple and as it as
+
+```
+
+
+
+---
+
 ## Prerequisites
 
 | Tool | Version | Required For |
