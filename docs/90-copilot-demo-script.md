@@ -38,7 +38,7 @@ biztalk source code is under `app-biztalk` folder. Keep it simple, include these
 Create a customised BizTalk migration agent using the **Claude** agent mode.
 
 ```
-/create-agent  create or update `biztalk-migration.agent.md` to include requirements and guildlines. Keep it simple, 
+/create-agent  create or update `biztalk-migration.agent.md` to include requirements and guildlines. Keep it simple.
 ```
 
 ---
