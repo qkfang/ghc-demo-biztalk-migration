@@ -161,6 +161,8 @@ Always start by reading every source file before generating any output:
 - The `AllocationId` must follow the pattern `"FA-" + ContributionId` (from String Concatenate functoid)
 - `AllocationStatus` must default to `"PENDING"` (from constant functoid)
 - Do NOT add features beyond what the original BizTalk solution does
+- Do NOT use XSLT at runtime — implement all transformation logic in pure C#
+- Keep code and documentation **simple and straightforward** — this is a demo for business users to understand the value of GitHub Copilot
 
 ## Skills to Use
 
