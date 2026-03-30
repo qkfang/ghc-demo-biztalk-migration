@@ -1,318 +1,115 @@
 # Copilot Migration Demo Guide
 
+## Overview
 
-## Demo Guide
-
-
-### GitHub Copilot
-Use GitHub coding agent to create migration.
-
-
-```
-migrate Biztalk integration to Azure Functions
-```
-
-```
-migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
-
-- create the integraiton logics as a c# function app inside `func`
-- create tests for the integration inside `func`
-- create IaC deployment for azure inside `bicep`
-
-keep the init migration process simple and as it as
-
-```
-
-
-## BizTalk to Azure Functions Migration (~10 minutes)
+This guide walks through a live demo of migrating a legacy BizTalk Server integration to Azure Functions using GitHub Copilot.
 
 ---
 
-### Setup Checklist (Before Demo)
+### Setup Checklist
 
-- [ ] VS Code open with this repository
-- [ ] GitHub Copilot extension installed and signed in
-- [ ] Copilot Chat panel open (Ctrl+Shift+I)
-- [ ] `az/funcapp/SuperFundManagementFunc` open in Explorer sidebar
-- [ ] `biztalk/SuperFundManagement/Maps/ContributionToAllocationMap.btm` open in an editor tab
-- [ ] Terminal open in `az/funcapp/` folder
-- [ ] Font size bumped up for visibility
+- MCP tools enabled
 
 ---
 
-## Step 1: Generate Function Scaffold (2 min)
+### Step 1
 
-**Presenter Notes:** Start by showing the BizTalk orchestration file briefly, then switch to the empty function.
+Briefly walk through the existing legacy BizTalk project and explain the integration scenario.
 
-### What to Show First
-
-Open `biztalk/SuperFundManagement/Orchestrations/SuperFundManagementOrchestration.odx` and briefly say:
-
-> "This is the BizTalk orchestration — XML-based, Designer-driven, requires a full BizTalk Server. Let's see how Copilot helps us recreate this as a modern Azure Function."
-
-### Copilot Chat Prompt
-
-Open a **new file** `SuperFundManagementFunction_new.cs` in the Functions folder, then open Copilot Chat and type:
-
-```
-I have a BizTalk Server orchestration that:
-1. Activates on an HTTP POST with an XML body (SuperContribution schema)
-2. Transforms the XML using a map (SuperContribution → FundAllocationInstruction)
-3. POSTs the transformed XML to a downstream HTTP endpoint
-
-Generate an Azure Functions v4 .NET 8 isolated worker C# class with:
-- HTTP trigger on POST /api/contributions
-- XML deserialization using XmlSerializer
-- Dependency injection of IContributionTransformService and IFundAllocationSenderService
-- Returns 202 Accepted with a JSON body { allocationId, status }
-- Returns 400 on validation errors
-- Returns 502 if the downstream service fails
-```
-
-### Expected Copilot Output
-
-Copilot generates a complete function class including:
-- Constructor injection
-- `XmlSerializer.Deserialize()` for the request body
-- `ValidateOrder()` helper method
-- Try/catch with appropriate HTTP status codes
-- `ILogger` usage
-
-### Talking Points
-
-> "Notice how Copilot understood the BizTalk pattern — receive, transform, send — and translated it directly to Azure Functions concepts: HTTP trigger, service injection, and proper error codes. This would have taken a developer half a day to write from scratch."
 
 ---
 
-## Step 2: Refactor Legacy C# Logic (3 min)
+### Step 2
 
-**Presenter Notes:** Show the BizTalk map file, then use Copilot to explain and refactor the transform logic.
-
-### What to Show First
-
-Open `biztalk/SuperFundManagement/Maps/ContributionToAllocationMap.btm` and point at the functoid sections:
-
-> "Here's the BizTalk map — it uses drag-and-drop 'functoids'. The String Concatenate functoid adds 'FA-' to the ContributionId. The Looping functoid iterates member allocations. Copilot can read this and write the equivalent C# code."
-
-### Copilot Chat Prompt (in context of the .btm file open)
+Use **GitHub Copilot Chat** (Claude Sonnet 4.6 model) to analyse the existing BizTalk project and generate a visual summary.
 
 ```
-Looking at this BizTalk map file, explain what each functoid does 
-and then rewrite the entire transformation as a clean C# method 
-in ContributionTransformService that maps SuperContribution to FundAllocationInstruction.
-
-The method should:
-- Prefix AllocationId with "FA-"
-- Map CustomerDetails fields
-- Use LINQ to transform Items into LineItems
-- Calculate LineTotal as Quantity * UnitPrice
-- Set Status to "PENDING"
-- Map ShippingAddress to ShipTo
+#agent create 'biztalk.md' mermaid diagram markdown file to describe current biztalk project.
+biztalk source code is under `app-biztalk` folder. Keep it simple, include these:
+- End-to-End Message Flow
+- Schema Structures
+- Field-by-Field Mapping Table
 ```
-
-### Expected Copilot Output
-
-```csharp
-public FundAllocationInstruction Transform(SuperContribution order)
-{
-    return new FundAllocationInstruction
-    {
-        AllocationId = $"FA-{contribution.ContributionId}",
-        SourceContributionRef = contribution.ContributionId,
-        CustomerDetails = new CustomerDetails
-        {
-            Id = contribution.EmployerId,
-            Name = contribution.EmployerName,
-            Email = order.CustomerEmail
-        },
-        LineItems = new FulfillmentLineItems
-        {
-            LineItem = order.Items.Item.Select(item => new LineItem
-            {
-                SKU = item.ProductCode,
-                Description = item.ProductName,
-                Qty = item.Quantity,
-                Price = item.UnitPrice,
-                LineTotal = item.Quantity * item.UnitPrice   // Multiplication functoid
-            }).ToList()
-        },
-        // ... etc
-    };
-}
-```
-
-### Inline Chat Prompt (select the functoid comment in the .btm file)
-
-With the multiplication functoid section selected, press **Ctrl+I** (inline chat) and type:
-
-```
-Convert this BizTalk multiplication functoid to C# equivalent code
-```
-
-### Talking Points
-
-> "Copilot understands BizTalk XML artifacts — it reads the functoid type, the input parameters, and generates the exact C# equivalent. The 700-line XML map file becomes 50 lines of readable, testable C#."
 
 ---
 
-## Step 3: Auto-Generate Unit Tests (3 min)
+### Step 3
 
-**Presenter Notes:** Show existing empty test file, then use Copilot to generate all tests.
-
-### What to Show First
-
-Open `az/funcapp/SuperFundManagementFunc.Tests/Services/ContributionTransformServiceTests.cs` and say:
-
-> "We have the service written. Now let's ask Copilot to generate comprehensive unit tests — the kind that would have required a full test strategy document with BizTalk."
-
-### Copilot Chat Prompt (with ContributionTransformService.cs open in context)
+Create a customised BizTalk migration agent using the **Claude** agent mode.
 
 ```
-Generate comprehensive xUnit tests for ContributionTransformService. 
-Include tests for:
-1. AllocationId gets "FA-" prefix (Assert.StartsWith)
-2. CustomerDetails fields are mapped correctly
-3. LineItems are mapped with correct count and LineTotal calculation (Qty × Price)
-4. Status is always "PENDING"
-5. ShippingAddress is correctly mapped to ShipTo
-6. OrderTotal is preserved
-7. ArgumentNullException is thrown for null input
-
-Use a private helper method BuildSampleOrder() that returns a realistic SuperContribution.
-Show exact expected values in each assertion.
+/create-agent  create or update `biztalk-migration.agent.md` to include requirements and guildlines. Keep it simple, 
 ```
-
-### Expected Copilot Output
-
-Copilot generates all 7 test methods with:
-- Descriptive names following the pattern `MethodName_Condition_ExpectedResult`
-- Concrete assertion values (`Assert.Equal(89.97m, first.LineTotal)`)
-- The `BuildSampleOrder()` helper shared across tests
-
-### Inline Quick Test (press Ctrl+I on the Transform method)
-
-```
-/tests Generate a test that verifies LineTotal = Quantity * UnitPrice for each line item
-```
-
-### Run the tests
-
-```bash
-cd func && dotnet test --verbosity minimal
-```
-
-All tests pass immediately.
-
-### Talking Points
-
-> "With BizTalk, testing the map required deploying to a BizTalk server or using a limited BizTalk Unit Test Framework. Here, Copilot generated tests in seconds that run in milliseconds, with zero infrastructure. Notice the assertion on line `Assert.Equal(89.97m, first.LineTotal)` — Copilot calculated 3 × 29.99 for us."
 
 ---
 
-## Step 4: Inline Documentation (2 min)
+### Step 4
 
-**Presenter Notes:** Show undocumented code, then use Copilot to add XML doc comments.
-
-### What to Show First
-
-Open `az/funcapp/SuperFundManagementaz/funcapp/Services/ContributionTransformService.cs` and highlight the class without XML docs.
-
-### Copilot Chat Prompt
+Open **GitHub Copilot CLI** and create a GitHub issue to track the migration work.
 
 ```
-Add XML documentation comments to this ContributionTransformService class and 
-its Transform method. The comments should:
-- Explain that this replaces the BizTalk ContributionToAllocationMap.btm
-- Document each significant mapping step in the method body
-- Reference the BizTalk equivalent functoid names in inline comments
-- Add <param> and <returns> tags
-```
+#agent create an issue ticket in github copilot for biztalk migration
 
-### Expected Copilot Output
+title: 'migrate Biztalk integration to Azure Functions'
+body: 'migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
+- create the integraiton logics as a c# function app inside `az\funcapp` with swagger ui
+- create tests for the integration inside `az\funcapp`
+- create IaC deployment for azure inside `az\bicep`
 
-```csharp
-/// <summary>
-/// Implements the order-to-fulfillment transformation logic.
-/// This is the Azure Functions equivalent of the BizTalk ContributionToAllocationMap.btm,
-/// including the String Concatenate functoid (FA- prefix) and Multiplication functoid (LineTotal).
-/// </summary>
-public class ContributionTransformService : IContributionTransformService
-{
-    /// <summary>
-    /// Transforms a <see cref="SuperContribution"/> into a <see cref="FundAllocationInstruction"/>,
-    /// applying all business rules equivalent to the BizTalk map functoids.
-    /// </summary>
-    /// <param name="order">The incoming source order to transform.</param>
-    /// <returns>A fully populated <see cref="FundAllocationInstruction"/> ready to dispatch.</returns>
-    public FundAllocationInstruction Transform(SuperContribution order)
-    {
-        return new FundAllocationInstruction
-        {
-            // BizTalk equivalent: String Concatenate functoid("FA-", OrderId)
-            AllocationId = $"FA-{contribution.ContributionId}",
-            // ...
-        };
-    }
-}
-```
-
-### Inline Chat on a specific line
-
-Select the `LineTotal = item.Quantity * item.UnitPrice` line, press **Ctrl+I**:
+keep the init migration process simple and as it as'
 
 ```
-Add an inline comment referencing the BizTalk Multiplication functoid
-```
-
-Copilot adds:
-```csharp
-// BizTalk equivalent: Multiplication functoid(Quantity, UnitPrice)
-LineTotal = item.Quantity * item.UnitPrice
-```
-
-### Talking Points
-
-> "One of the underappreciated values of migration is documentation — BizTalk maps have almost no embedded documentation. Copilot can generate rich XML doc comments that also preserve the BizTalk lineage, which is invaluable for teams maintaining both systems during a transition period."
 
 ---
 
-## Wrap-Up Talking Points (30 sec)
+### Step 5
 
-> "In 10 minutes, Copilot helped us:
-> 1. **Scaffold** the Azure Function structure from a description of BizTalk behavior
-> 2. **Refactor** a 700-line XML map file into 50 lines of readable C#
-> 3. **Generate** a full test suite that runs in under 2 seconds
-> 4. **Document** the code in a way that preserves institutional knowledge
->
-> The same migration without Copilot would take an experienced BizTalk developer 2–3 days. With Copilot, it's measured in hours."
+Go to **github.com**, open the issue, and assign it to GitHub Copilot to begin autonomous implementation.
+
+```
+#agent create an issue ticket in github copilot for biztalk migration use GitHub MCP
+
+title: 'migrate Biztalk integration to Azure Functions'
+body: 'migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
+- create the integraiton logics as a c# function app inside `az\funcapp` with swagger
+- create tests for the integration inside `az\funcapp`
+- create IaC deployment for azure inside `az\bicep`
+
+keep the init migration process simple and as it as'
+
+```
 
 ---
 
-## Backup / Bonus Demos
+### Step 6
 
-### Bonus: Generate Bicep IaC
+Observe the Copilot agent working through the migration for 1-2 minutes. Then navigate to an already implemented ticket to show the final implementation.
 
-```
-Generate Azure Bicep to deploy this .NET 8 isolated Azure Function with:
-- Consumption plan (Y1/Dynamic)
-- Storage account (Standard_LRS)
-- Application Insights with Log Analytics workspace
-- App setting for FulfillmentServiceUrl
-- All resources tagged with environment and project
-```
+---
 
-### Bonus: Explain BizTalk file
 
-Select all content in `SuperFundManagementOrchestration.odx`, open Copilot Chat:
+### Step 7
 
-```
-Explain what this BizTalk ODX orchestration file does in plain English, 
-and identify what Azure services or patterns would replace each component.
-```
+Check out the agent's working branch locally, run the Function App tests, and call the endpoint to verify the migrated integration returns the expected response.
 
-### Bonus: Validate XML Schema
+---
 
-```
-Given this XSD schema, generate a valid sample XML document I can use 
-to test the SuperFundManagementFunction HTTP endpoint with curl.
-```
+### Step 8
+
+Ask a question in the chat to ask agent to find mapping logics for `ContributionMapHelper.cs`
+
+Ask copilot to example one class in c# function app
+
+Ask copilot to create a github action pipeline to deploy `az\bicep` to azure, and microsoft learn to explain what is funct app.
+
+
+---
+
+### Step 9
+
+Include work context to github copilot via Work-IQ and Foundry-IQ
+
+Ask questions about a file in my sharepoint and a knowledge question from AI Search.
+
+
+---

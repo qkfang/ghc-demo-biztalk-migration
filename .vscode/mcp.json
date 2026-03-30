@@ -4,9 +4,13 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
     },
-    "microsoft-docs": {
+    "microsoft-learn": {
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "work-iq": {
+      "command": "npx",
+      "args": ["-y", "@microsoft/workiq@latest", "mcp"]
     }
   }
 }
