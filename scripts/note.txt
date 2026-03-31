@@ -1,0 +1,24 @@
+#agent create 'biztalk.md' mermaid diagram markdown file to describe current biztalk project.
+biztalk source code is under `app-biztalk` folder. Keep it simple, include these:
+- End-to-End Message Flow
+- Schema Structures
+- Field-by-Field Mapping Table
+
+
+
+
+/create-agent  create or update `biztalk-migration.agent.md` to include requirements and guildlines. Keep it simple.
+
+
+
+
+
+#agent create an issue ticket in github copilot for biztalk migration
+
+title: 'migrate Biztalk integration to Azure Functions'
+body: 'migrate existing BizTalk application inside `biztalk` folder to new integration app on Azure.
+- create the integraiton logics as a c# function app inside `az\funcapp` with swagger ui
+- create tests for the integration inside `az\funcapp`
+- create IaC deployment for azure inside `az\bicep`
+
+keep the init migration process simple and as it as'
