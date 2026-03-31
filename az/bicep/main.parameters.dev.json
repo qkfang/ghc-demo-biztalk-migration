@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "australiaeast"
+    },
+    "environmentName": {
+      "value": "dev"
+    },
+    "appName": {
+      "value": "superfund"
+    },
+    "fundAdminApiUrl": {
+      "value": "http://localhost:5050/api/allocations"
+    },
+    "tags": {
+      "value": {
+        "Application": "SuperFund",
+        "Environment": "dev",
+        "ManagedBy": "Bicep",
+        "MigratedFrom": "BizTalk Server 2020"
+      }
+    }
+  }
+}
