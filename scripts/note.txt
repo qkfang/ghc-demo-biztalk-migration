@@ -22,3 +22,6 @@ body: 'migrate existing BizTalk application inside `biztalk` folder to new integ
 - create IaC deployment for azure inside `az\bicep`
 
 keep the init migration process simple and as it as'
+
+
+
