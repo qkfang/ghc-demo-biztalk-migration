@@ -1,0 +1,34 @@
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SuperContributionRequest xmlns="http://SuperFundManagement.Schemas.SuperContribution">
+    <ContributionId>CONT-2024-001</ContributionId>
+    <EmployerId>EMP-001</EmployerId>
+    <EmployerName>Acme Corporation Pty Ltd</EmployerName>
+    <EmployerABN>51824753556</EmployerABN>
+    <PayPeriodEndDate>2024-06-30</PayPeriodEndDate>
+    <Members>
+        <Member>
+            <MemberAccountNumber>SF-100001</MemberAccountNumber>
+            <MemberName>Jane Smith</MemberName>
+            <ContributionType>SuperannuationGuarantee</ContributionType>
+            <GrossAmount>875.00</GrossAmount>
+        </Member>
+    </Members>
+    <TotalContribution>875.00</TotalContribution>
+    <Currency>AUD</Currency>
+    <PaymentReference>Test100</PaymentReference>
+</SuperContributionRequest>
+
+
+
+find mapping logics for ContributionMapHelper.cs
+
+
+create a github action pipeline to deploy az\bicep to azure, and microsoft learn for best practise.
+
+
+find the meeting invite for 'Enabling ART’s 2030 Strategy' in m365
+
+
+
