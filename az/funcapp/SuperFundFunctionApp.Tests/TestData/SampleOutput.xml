@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sample BizTalk output message produced by ContributionToAllocationMap from SampleInput.xml.
+  Schema: FundAllocationSchema.xsd
+  Namespace: http://SuperFundManagement.Schemas.FundAllocation
+
+  Scripting Functoid transformations visible in this output:
+    • Functoid 1 (String Concatenate)      : AllocationId = "FA-" + "CONT-2024-001" = "FA-CONT-2024-001"
+    • Functoid 2 (String Constant)         : AllocationStatus = "PENDING" (each member)
+    • Functoid 3 (FormatABN)               : "51824753556" → "51 824 753 556"
+    • Functoid 4 (CalculateNetContribution): 875.00 × 0.85 = 743.75, 750.00 × 0.85 = 637.50
+-->
+<FundAllocationInstruction xmlns="http://SuperFundManagement.Schemas.FundAllocation">
+  <AllocationId>FA-CONT-2024-001</AllocationId>
+  <SourceContributionRef>CONT-2024-001</SourceContributionRef>
+  <EmployerDetails>
+    <EmployerId>EMP-001</EmployerId>
+    <EmployerName>Acme Corporation Pty Ltd</EmployerName>
+    <!-- ABN formatted by Scripting Functoid 3 (FormatABN) -->
+    <ABN>51 824 753 556</ABN>
+  </EmployerDetails>
+  <AllocationDate>2024-06-30</AllocationDate>
+  <MemberAllocations>
+    <Allocation>
+      <AccountNumber>SF-100001</AccountNumber>
+      <MemberName>Jane Smith</MemberName>
+      <ContributionType>SuperannuationGuarantee</ContributionType>
+      <!-- ContributionAmount calculated by Scripting Functoid 4: 875.00 × 0.85 = 743.75 -->
+      <ContributionAmount>743.75</ContributionAmount>
+      <AllocationStatus>PENDING</AllocationStatus>
+    </Allocation>
+    <Allocation>
+      <AccountNumber>SF-100002</AccountNumber>
+      <MemberName>John Citizen</MemberName>
+      <ContributionType>SuperannuationGuarantee</ContributionType>
+      <!-- ContributionAmount calculated by Scripting Functoid 4: 750.00 × 0.85 = 637.50 -->
+      <ContributionAmount>637.50</ContributionAmount>
+      <AllocationStatus>PENDING</AllocationStatus>
+    </Allocation>
+  </MemberAllocations>
+  <TotalAllocated>1625.00</TotalAllocated>
+  <CurrencyCode>AUD</CurrencyCode>
+  <Status>PENDING</Status>
+</FundAllocationInstruction>
